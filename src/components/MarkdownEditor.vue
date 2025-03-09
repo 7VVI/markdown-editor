@@ -38,7 +38,7 @@
       </div>
     </div>
     
-    <!-- 移动到这里的格式工具栏 -->
+    <!-- 格式工具栏 -->
     <div class="simple-format-toolbar">
       <button @click="insertText('# ')" title="标题1">H1</button>
       <button @click="insertText('## ')" title="标题2">H2</button>
@@ -57,7 +57,7 @@
       <button @click="insertText('| 表头1 | 表头2 |\n| ------ | ------ |\n| 单元格1 | 单元格2 |')" title="表格">▦</button>
     </div>
     
-    <!-- 编辑器主体 -->
+    <!-- 编辑器主体内容区域 -->
     <div class="editor-content" ref="editorContent">
       <div class="editor-container">
         <!-- 大纲区域 -->
@@ -66,38 +66,45 @@
             <h3>文档大纲</h3>
           </div>
           <div class="outline-body">
-            <div
-              v-for="(item, index) in outline"
-              :key="index"
-              class="outline-item"
-              :class="{ 
-                'active': currentHeadingIndex === index,
-                [`level-${item.level}`]: true 
-              }"
-              @click="scrollToHeading(item.index)"
-            >
-              <span class="outline-item-text">{{ item.text }}</span>
-            </div>
-            <div v-if="outline.length === 0" class="outline-empty">
-              暂无大纲
+            <div class="outline-body-content">
+              <div
+                v-for="(item, index) in outline"
+                :key="index"
+                class="outline-item"
+                :class="{ 
+                  'active': currentHeadingIndex === index,
+                  [`level-${item.level}`]: true 
+                }"
+                @click="scrollToHeading(item.index)"
+              >
+                <span class="outline-item-text">{{ item.text }}</span>
+              </div>
+              <div v-if="outline.length === 0" class="outline-empty">
+                暂无大纲
+              </div>
             </div>
           </div>
         </div>
         
+        <!-- 编辑区域 -->
         <div class="editor-input" :class="{ 'full-width': !showPreview }">
-          <textarea
-            ref="editorTextarea"
-            v-model="content"
-            @input="updateContent"
-            @contextmenu="showContextMenu"
-            @keydown="handleKeyDown"
-            placeholder="请输入Markdown内容..."
-          ></textarea>
+          <div class="editor-input-container">
+            <textarea
+              ref="editorTextarea"
+              v-model="content"
+              @input="updateContent"
+              @contextmenu="showContextMenu"
+              @keydown="handleKeyDown"
+              placeholder="请输入Markdown内容..."
+            ></textarea>
+          </div>
         </div>
         
         <!-- 预览区域 -->
         <div class="editor-preview" ref="previewDiv" v-show="showPreview">
-          <div v-html="renderedContent"></div>
+          <div class="preview-content">
+            <div v-html="renderedContent"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1546,6 +1553,7 @@ onUnmounted(() => {
   align-items: center;
   z-index: 1000;  /* 工具栏层级，低于标题栏 */
   flex-shrink: 0;
+  position: relative; /* 确保工具栏固定 */
 }
 
 .simple-format-toolbar button {
@@ -1568,10 +1576,10 @@ onUnmounted(() => {
   display: flex;
   flex: 1;
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* 防止整体滚动 */
   border: none;
   padding: 0;
-  margin-top: 0;
+  margin: 0;
   background-color: white;
   height: calc(100vh - 75px);  /* 减去标题栏和工具栏的高度 */
 }
@@ -1581,20 +1589,27 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* 防止容器滚动 */
   background-color: white;
 }
 
 .editor-input {
   flex: 1;
   height: 100%;
-  overflow: auto;
+  overflow: hidden; /* 编辑区域本身不滚动 */
   padding: 0;
   margin: 0;
   box-sizing: border-box;
   position: relative;
   background-color: white;
   z-index: 999;  /* 编辑区域和内容保持同一层级 */
+}
+
+.editor-input-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
 .editor-input textarea {
@@ -1611,22 +1626,42 @@ onUnmounted(() => {
   background-color: white;
   color: #2c3e50;
   box-sizing: border-box;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 999;
+  overflow-y: auto; /* 只有文本区域可以滚动 */
+  overflow-x: hidden; /* 防止水平滚动 */
 }
 
 /* 预览区域样式 */
 .editor-preview {
   flex: 1;
   height: 100%;
-  overflow: auto;
-  padding: 10px;
+  overflow: hidden; /* 预览区域本身不滚动 */
+  padding: 0;
   margin: 0;
   box-sizing: border-box;
   position: relative;
   background-color: white;
   border-left: 1px solid #dcdfe6;
   z-index: 999;  /* 与编辑区域保持同一层级 */
+}
+
+.preview-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-content > div {
+  height: 100%;
+  overflow-y: auto; /* 只有内容区域可以滚动 */
+  overflow-x: hidden; /* 防止水平滚动 */
+  padding: 10px;
 }
 
 /* 预览区域内容样式 */
@@ -2157,15 +2192,6 @@ onUnmounted(() => {
   width: 100%;
 }
 
-.outline-toggle-btn {
-  margin-right: 8px;
-  transition: transform 0.3s ease;
-}
-
-.outline-toggle-btn:hover {
-  transform: scale(1.1);
-}
-
 .outline-header {
   padding: 10px;
   border-bottom: 1px solid #e6e6e6;
@@ -2173,6 +2199,9 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   background-color: #f0f2f5;
+  flex-shrink: 0; /* 防止头部压缩 */
+  position: relative; /* 确保头部固定 */
+  z-index: 2; /* 确保在内容之上 */
 }
 
 .outline-header h3 {
@@ -2184,23 +2213,45 @@ onUnmounted(() => {
 
 .outline-body {
   flex: 1;
-  overflow-y: auto;
+  position: relative;
+  overflow: hidden; /* 容器本身不滚动 */
+  padding: 0;
+  margin: 0;
+}
+
+.outline-body-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto; /* 只有内容区域可以滚动 */
+  overflow-x: hidden; /* 防止水平滚动 */
   padding: 10px 0;
   scrollbar-width: thin;
   scrollbar-color: #c0c4cc #f4f4f4;
 }
 
-.outline-body::-webkit-scrollbar {
+.outline-body-content::-webkit-scrollbar {
   width: 6px;
 }
 
-.outline-body::-webkit-scrollbar-track {
+.outline-body-content::-webkit-scrollbar-track {
   background: #f4f4f4;
 }
 
-.outline-body::-webkit-scrollbar-thumb {
+.outline-body-content::-webkit-scrollbar-thumb {
   background-color: #c0c4cc;
   border-radius: 3px;
+}
+
+.outline-toggle-btn {
+  margin-right: 8px;
+  transition: transform 0.3s ease;
+}
+
+.outline-toggle-btn:hover {
+  transform: scale(1.1);
 }
 
 .outline-item {
