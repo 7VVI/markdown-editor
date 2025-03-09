@@ -62,7 +62,7 @@
             <h3>文档大纲</h3>
             <el-button type="text" @click="toggleOutline" class="outline-toggle">
               <el-icon><ArrowLeft /></el-icon>
-            </el-button>
+          </el-button>
           </div>
           <div class="outline-body">
             <div
@@ -80,24 +80,24 @@
             <div v-if="outline.length === 0" class="outline-empty">
               暂无大纲
             </div>
-          </div>
-        </div>
-        
-        <div class="editor-input" :class="{ 'full-width': !showPreview }">
-          <textarea
-            ref="editorTextarea"
-            v-model="content"
-            @input="updateContent"
-            @contextmenu="showContextMenu"
-            @keydown="handleKeyDown"
-            placeholder="请输入Markdown内容..."
-          ></textarea>
-        </div>
+      </div>
+    </div>
+    
+      <div class="editor-input" :class="{ 'full-width': !showPreview }">
+        <textarea
+          ref="editorTextarea"
+          v-model="content"
+          @input="updateContent"
+          @contextmenu="showContextMenu"
+          @keydown="handleKeyDown"
+          placeholder="请输入Markdown内容..."
+        ></textarea>
+      </div>
         
         <!-- 预览区域 -->
         <div class="editor-preview" ref="previewDiv" v-show="showPreview">
-          <div v-html="renderedContent"></div>
-        </div>
+        <div v-html="renderedContent"></div>
+      </div>
       </div>
     </div>
     
