@@ -93,6 +93,7 @@
               ref="editorTextarea"
               v-model="content"
               @input="updateContent"
+              @scroll="handleEditorScroll"
               @contextmenu="showContextMenu"
               @keydown="handleKeyDown"
               placeholder="请输入Markdown内容..."
@@ -100,10 +101,22 @@
           </div>
         </div>
         
+        <!-- 中间滚动条 -->
+        <div class="center-scrollbar" v-if="showPreview">
+          <div class="scrollbar-track" @click="handleScrollbarTrackClick">
+            <div 
+              class="scrollbar-thumb" 
+              ref="scrollbarThumb"
+              :style="{ height: thumbHeight + 'px', top: thumbPosition + 'px' }"
+              @mousedown="startDrag"
+            ></div>
+          </div>
+        </div>
+        
         <!-- 预览区域 -->
         <div class="editor-preview" ref="previewDiv" v-show="showPreview">
           <div class="preview-content">
-            <div v-html="renderedContent"></div>
+            <div v-html="renderedContent" @scroll="handlePreviewScroll"></div>
           </div>
         </div>
       </div>
@@ -348,7 +361,7 @@ watch(showPreview, () => {
 
 // 处理编辑器滚动
 function handleEditorScroll() {
-  if (!editorTextarea.value || !showPreview.value) return
+  if (!editorTextarea.value || !showPreview.value || !previewDiv.value) return
   
   // 获取滚动位置和内容高度
   const scrollTop = editorTextarea.value.scrollTop
@@ -362,10 +375,11 @@ function handleEditorScroll() {
   updateThumbPosition()
   
   // 同步预览区域滚动
-  if (previewDiv.value) {
-    const previewScrollHeight = previewDiv.value.scrollHeight
-    const previewClientHeight = previewDiv.value.clientHeight
-    previewDiv.value.scrollTop = scrollRatio * (previewScrollHeight - previewClientHeight)
+  const previewContent = previewDiv.value.querySelector('.preview-content > div')
+  if (previewContent) {
+    const previewScrollHeight = previewContent.scrollHeight
+    const previewClientHeight = previewContent.clientHeight
+    previewContent.scrollTop = scrollRatio * (previewScrollHeight - previewClientHeight)
   }
 }
 
@@ -1313,26 +1327,25 @@ function debugPreviewState() {
 }
 
 // 处理预览区域滚动
-function handlePreviewScroll() {
-  if (!previewDiv.value || !showPreview.value) return
+function handlePreviewScroll(e) {
+  if (!editorTextarea.value || !showPreview.value) return
   
   // 获取滚动位置和内容高度
-  const scrollTop = previewDiv.value.scrollTop
-  const scrollHeight = previewDiv.value.scrollHeight
-  const clientHeight = previewDiv.value.clientHeight
+  const previewContent = e.target
+  const scrollTop = previewContent.scrollTop
+  const scrollHeight = previewContent.scrollHeight
+  const clientHeight = previewContent.clientHeight
   
   // 计算滚动比例
   const scrollRatio = scrollTop / (scrollHeight - clientHeight)
   
+  // 同步编辑器区域滚动
+  const editorScrollHeight = editorTextarea.value.scrollHeight
+  const editorClientHeight = editorTextarea.value.clientHeight
+  editorTextarea.value.scrollTop = scrollRatio * (editorScrollHeight - editorClientHeight)
+  
   // 更新滚动条位置
   updateThumbPosition()
-  
-  // 同步编辑器区域滚动
-  if (editorTextarea.value) {
-    const editorScrollHeight = editorTextarea.value.scrollHeight
-    const editorClientHeight = editorTextarea.value.clientHeight
-    editorTextarea.value.scrollTop = scrollRatio * (editorScrollHeight - editorClientHeight)
-  }
 }
 
 // 开始拖动滚动条
@@ -1487,6 +1500,53 @@ onUnmounted(() => {
     }
   }
 })
+
+// 处理滚动条轨道点击
+function handleScrollbarTrackClick(e) {
+  if (!editorTextarea.value || !editorContent.value || !showPreview.value) return
+  
+  // 获取点击位置相对于轨道顶部的距离
+  const trackRect = e.currentTarget.getBoundingClientRect()
+  const clickPosition = e.clientY - trackRect.top
+  
+  // 计算滚动条应该移动到的位置
+  const editorHeight = editorContent.value.clientHeight
+  const contentHeight = editorTextarea.value.scrollHeight
+  const maxScrollTop = contentHeight - editorHeight
+  
+  // 计算点击位置对应的滚动比例
+  const scrollRatio = clickPosition / trackRect.height
+  
+  // 设置编辑器滚动位置
+  editorTextarea.value.scrollTop = maxScrollTop * scrollRatio
+  
+  // 更新滚动条位置
+  updateThumbPosition()
+  
+  // 同步预览区域滚动
+  syncPreviewScroll()
+}
+
+// 同步预览区域滚动
+function syncPreviewScroll() {
+  if (!editorTextarea.value || !previewDiv.value || !showPreview.value) return
+  
+  // 获取滚动位置和内容高度
+  const scrollTop = editorTextarea.value.scrollTop
+  const scrollHeight = editorTextarea.value.scrollHeight
+  const clientHeight = editorTextarea.value.clientHeight
+  
+  // 计算滚动比例
+  const scrollRatio = scrollTop / (scrollHeight - clientHeight)
+  
+  // 同步预览区域滚动
+  const previewContent = previewDiv.value.querySelector('.preview-content > div')
+  if (previewContent) {
+    const previewScrollHeight = previewContent.scrollHeight
+    const previewClientHeight = previewContent.clientHeight
+    previewContent.scrollTop = scrollRatio * (previewScrollHeight - previewClientHeight)
+  }
+}
 </script>
 
 <style scoped>
@@ -1632,8 +1692,15 @@ onUnmounted(() => {
   right: 0;
   bottom: 0;
   z-index: 999;
-  overflow-y: auto; /* 只有文本区域可以滚动 */
+  overflow-y: scroll; /* 使用scroll而不是auto，确保滚动条空间始终存在 */
   overflow-x: hidden; /* 防止水平滚动 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* 隐藏Webkit浏览器的滚动条 */
+.editor-input textarea::-webkit-scrollbar {
+  display: none;
 }
 
 /* 预览区域样式 */
@@ -1646,7 +1713,7 @@ onUnmounted(() => {
   box-sizing: border-box;
   position: relative;
   background-color: white;
-  border-left: 1px solid #dcdfe6;
+  border-left: none; /* 移除左边框，由滚动条区域提供分隔 */
   z-index: 999;  /* 与编辑区域保持同一层级 */
 }
 
@@ -1659,9 +1726,16 @@ onUnmounted(() => {
 
 .preview-content > div {
   height: 100%;
-  overflow-y: auto; /* 只有内容区域可以滚动 */
+  overflow-y: scroll; /* 使用scroll而不是auto，确保滚动条空间始终存在 */
   overflow-x: hidden; /* 防止水平滚动 */
   padding: 10px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* 隐藏Webkit浏览器的滚动条 */
+.preview-content > div::-webkit-scrollbar {
+  display: none;
 }
 
 /* 预览区域内容样式 */
@@ -2225,24 +2299,16 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  overflow-y: auto; /* 只有内容区域可以滚动 */
+  overflow-y: scroll; /* 使用scroll而不是auto，确保滚动条空间始终存在 */
   overflow-x: hidden; /* 防止水平滚动 */
   padding: 10px 0;
-  scrollbar-width: thin;
-  scrollbar-color: #c0c4cc #f4f4f4;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
+/* 隐藏Webkit浏览器的滚动条 */
 .outline-body-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.outline-body-content::-webkit-scrollbar-track {
-  background: #f4f4f4;
-}
-
-.outline-body-content::-webkit-scrollbar-thumb {
-  background-color: #c0c4cc;
-  border-radius: 3px;
+  display: none;
 }
 
 .outline-toggle-btn {
@@ -2334,4 +2400,76 @@ onUnmounted(() => {
 }
 
 /* 全屏模式样式 */
+
+/* 中间滚动条样式 */
+.center-scrollbar {
+  width: 12px;
+  height: 100%;
+  position: relative;
+  background-color: #f5f7fa;
+  border-left: 1px solid #e6e6e6;
+  border-right: 1px solid #e6e6e6;
+  z-index: 1000;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.center-scrollbar:hover {
+  background-color: #ebeef5;
+}
+
+.scrollbar-track {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 2px 0;
+  box-sizing: border-box;
+}
+
+.scrollbar-thumb {
+  width: 6px;
+  background-color: #c0c4cc;
+  border-radius: 3px;
+  position: absolute;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.scrollbar-thumb:hover {
+  width: 8px;
+  background-color: #909399;
+}
+
+.scrollbar-thumb:active {
+  width: 8px;
+  background-color: #606266;
+}
+
+/* 调整编辑区域和预览区域的样式 */
+.editor-input {
+  flex: 1;
+  height: 100%;
+  overflow: hidden; /* 编辑区域本身不滚动 */
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  position: relative;
+  background-color: white;
+  z-index: 999;  /* 编辑区域和内容保持同一层级 */
+}
+
+.editor-preview {
+  flex: 1;
+  height: 100%;
+  overflow: hidden; /* 预览区域本身不滚动 */
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  position: relative;
+  background-color: white;
+  border-left: none; /* 移除左边框，由滚动条区域提供分隔 */
+  z-index: 999;  /* 与编辑区域保持同一层级 */
+}
 </style> 
