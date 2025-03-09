@@ -6,6 +6,10 @@
         <h2>Markdown编辑器</h2>
       </div>
       <div class="header-right">
+        <el-button @click="toggleOutline" title="切换大纲" class="outline-toggle-btn">
+          <el-icon v-if="!showOutline"><Menu /></el-icon>
+          <el-icon v-else><Operation /></el-icon>
+        </el-button>
         <el-select v-model="currentTheme" placeholder="选择主题" @change="changeTheme">
           <el-option
             v-for="theme in themes"
@@ -57,12 +61,9 @@
     <div class="editor-content" ref="editorContent">
       <div class="editor-container">
         <!-- 大纲区域 -->
-        <div class="outline-container" v-show="showOutline">
+        <div class="outline-container" :class="{ 'outline-collapsed': !showOutline }">
           <div class="outline-header">
             <h3>文档大纲</h3>
-            <el-button type="text" @click="toggleOutline" class="outline-toggle">
-              <el-icon><ArrowLeft /></el-icon>
-          </el-button>
           </div>
           <div class="outline-body">
             <div
@@ -80,24 +81,24 @@
             <div v-if="outline.length === 0" class="outline-empty">
               暂无大纲
             </div>
-      </div>
-    </div>
-    
-      <div class="editor-input" :class="{ 'full-width': !showPreview }">
-        <textarea
-          ref="editorTextarea"
-          v-model="content"
-          @input="updateContent"
-          @contextmenu="showContextMenu"
-          @keydown="handleKeyDown"
-          placeholder="请输入Markdown内容..."
-        ></textarea>
-      </div>
+          </div>
+        </div>
+        
+        <div class="editor-input" :class="{ 'full-width': !showPreview }">
+          <textarea
+            ref="editorTextarea"
+            v-model="content"
+            @input="updateContent"
+            @contextmenu="showContextMenu"
+            @keydown="handleKeyDown"
+            placeholder="请输入Markdown内容..."
+          ></textarea>
+        </div>
         
         <!-- 预览区域 -->
         <div class="editor-preview" ref="previewDiv" v-show="showPreview">
-        <div v-html="renderedContent"></div>
-      </div>
+          <div v-html="renderedContent"></div>
+        </div>
       </div>
     </div>
     
@@ -218,7 +219,7 @@ const colorPresets = ref([
 ])
 
 // 大纲相关状态
-const showOutline = ref(true)
+const showOutline = ref(localStorage.getItem('outlineVisible') !== 'false')
 const outline = ref([])
 const currentHeadingIndex = ref(-1)
 
@@ -1380,6 +1381,8 @@ function endDrag() {
 // 切换大纲显示
 function toggleOutline() {
   showOutline.value = !showOutline.value
+  // 保存大纲显示状态到本地存储
+  localStorage.setItem('outlineVisible', showOutline.value ? 'true' : 'false')
 }
 
 // 解析Markdown内容生成大纲
@@ -2127,6 +2130,40 @@ onUnmounted(() => {
   flex-shrink: 0;
   position: relative;
   z-index: 999;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden; /* 防止内容溢出 */
+}
+
+.outline-collapsed {
+  width: 0 !important;
+  border-right: none;
+}
+
+/* 防止大纲内容在折叠过程中闪烁 */
+.outline-collapsed .outline-header,
+.outline-collapsed .outline-body {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-20px);
+  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+}
+
+.outline-header,
+.outline-body {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  transition: opacity 0.3s ease 0.05s, visibility 0.3s ease 0.05s, transform 0.3s ease 0.05s;
+  width: 100%;
+}
+
+.outline-toggle-btn {
+  margin-right: 8px;
+  transition: transform 0.3s ease;
+}
+
+.outline-toggle-btn:hover {
+  transform: scale(1.1);
 }
 
 .outline-header {
@@ -2135,22 +2172,35 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #f0f2f5;
 }
 
 .outline-header h3 {
   margin: 0;
   font-size: 16px;
   color: #333;
-}
-
-.outline-toggle {
-  padding: 2px;
+  font-weight: 600;
 }
 
 .outline-body {
   flex: 1;
   overflow-y: auto;
   padding: 10px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #c0c4cc #f4f4f4;
+}
+
+.outline-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.outline-body::-webkit-scrollbar-track {
+  background: #f4f4f4;
+}
+
+.outline-body::-webkit-scrollbar-thumb {
+  background-color: #c0c4cc;
+  border-radius: 3px;
 }
 
 .outline-item {
@@ -2161,10 +2211,12 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   transition: all 0.2s;
+  margin-bottom: 2px;
 }
 
 .outline-item:hover {
   background-color: #ebeef5;
+  border-left-color: #a0cfff;
 }
 
 .outline-item.active {
