@@ -157,6 +157,18 @@ body {
   margin: 1em 0;
 }
 
+/* 微信代码块包装器 */
+.code-block-wrapper-wechat {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+  background-color: #000000;
+  border-radius: 6px;
+  margin: 16px 0;
+  border: 1px solid #555;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
 pre {
   position: relative;
   background-color: #1e1e1e;
@@ -166,6 +178,20 @@ pre {
   overflow: auto;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   line-height: 1.5;
+  white-space: pre;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* 在包装器内的pre元素样式 */
+.code-block-wrapper-wechat pre {
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  background-color: transparent;
+  width: max-content;
+  min-width: 100%;
 }
 
 pre code {
@@ -173,6 +199,15 @@ pre code {
   white-space: pre;
   overflow-x: auto;
   color: #d4d4d4;
+  word-wrap: normal;
+  word-break: normal;
+  width: max-content;
+  min-width: 100%;
+}
+
+/* 在包装器内的code元素样式 */
+.code-block-wrapper-wechat pre code {
+  overflow-x: visible;
 }
 
 /* 代码块标题 */

@@ -21,7 +21,7 @@
         <el-button @click="togglePreview" title="切换预览">
           <el-icon><View /></el-icon>
         </el-button>
-        <el-button @click="toggleFullscreen" title="全屏编辑">
+        <!-- <el-button @click="toggleFullscreen" title="全屏编辑">
           <el-icon v-if="!isFullscreen"><FullScreen /></el-icon>
           <el-icon v-else><Close /></el-icon>
         </el-button>
@@ -30,10 +30,14 @@
         </el-button>
         <el-button @click="debugPreviewState" title="调试预览状态">
           <el-icon><View /></el-icon>
-        </el-button>
+        </el-button> -->
         <el-button type="success" @click="showWechatGuide" title="复制到微信公众号">
           <el-icon><Document /></el-icon>
           复制到公众号文章
+        </el-button>
+        <el-button type="primary" @click="exportMarkdown" title="导出为Markdown文件">
+          <el-icon><Download /></el-icon>
+          导出MD文件
         </el-button>
       </div>
     </div>
@@ -746,27 +750,17 @@ function processHighlightElements(codeElement) {
 }
 
 // 更新内容
-function updateContent(e) {
-  const newContent = e.target.value;
-  editorStore.setContent(newContent, false); // 更新内容但不添加历史记录
+function updateContent(e: Event) {
+  const target = e.target as HTMLTextAreaElement
+  editorStore.setContent(target.value)
   
   // 当内容变化时，触发大纲更新
-  updateOutline();
+  updateOutline()
   
   // 更新滚动条
   nextTick(() => {
-    updateScrollbarThumb();
-  });
-  
-  // 清除之前的定时器
-  if (debounceTimer) {
-    clearTimeout(debounceTimer);
-  }
-  
-  // 设置新的定时器，延迟添加历史记录
-  debounceTimer = setTimeout(() => {
-    editorStore.addHistory(newContent);
-  }, 500); // 500毫秒的防抖延迟
+    updateScrollbarThumb()
+  })
 }
 
 // 触发大纲更新
@@ -916,14 +910,24 @@ function setDontShowGuide() {
 async function copyToWechat() {
   const success = await editorStore.copyToWechat()
   if (success) {
-    ElMessage.success('富文本内容已复制到剪贴板，可直接粘贴到微信公众号')
+    ElMessage.success('已复制到剪贴板，可直接粘贴到微信公众号')
     
     // 显示指南（如果需要）
     if (!dontShowGuide.value) {
       guideVisible.value = true
     }
   } else {
-    ElMessage.error('复制失败，请手动复制')
+    ElMessage.error('复制失败，请重试')
+  }
+}
+
+// 导出为Markdown文件
+async function exportMarkdown() {
+  const success = await editorStore.exportToMarkdown()
+  if (success) {
+    ElMessage.success('Markdown文件导出成功')
+  } else {
+    ElMessage.error('导出失败，请重试')
   }
 }
 

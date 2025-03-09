@@ -118,6 +118,62 @@ export const useEditorStore = defineStore('editor', () => {
       // 增强处理，使其在微信编辑器中显示更好
       enhanceForWechat(tempDiv);
       
+      // 特殊处理代码块，确保横向滚动
+      const codeBlocks = tempDiv.querySelectorAll('pre');
+      codeBlocks.forEach(pre => {
+        // 检查是否已经有包装器
+        if (pre.parentElement && !pre.parentElement.classList.contains('code-block-wrapper-wechat')) {
+          // 创建包装容器
+          const wrapper = document.createElement('div');
+          wrapper.className = 'code-block-wrapper-wechat';
+          wrapper.style.position = 'relative';
+          wrapper.style.width = '100%';
+          wrapper.style.overflowX = 'auto';
+          wrapper.style.backgroundColor = '#000000';
+          wrapper.style.borderRadius = '6px';
+          wrapper.style.margin = '16px 0';
+          wrapper.style.border = '1px solid #555';
+          wrapper.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.5)';
+          
+          // 设置微信富文本编辑器支持的属性
+          wrapper.setAttribute('data-mce-style', 'position: relative; width: 100%; overflow-x: auto; background-color: #000000; border-radius: 6px; margin: 16px 0; border: 1px solid #555; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);');
+          
+          // 设置pre元素样式
+          pre.style.margin = '0';
+          pre.style.borderRadius = '0';
+          pre.style.border = 'none';
+          pre.style.boxShadow = 'none';
+          pre.style.width = 'max-content';
+          pre.style.minWidth = '100%';
+          pre.style.whiteSpace = 'pre';
+          pre.style.overflowX = 'visible';
+          
+          // 确保code元素也有正确的样式
+          const codeEl = pre.querySelector('code');
+          if (codeEl) {
+            const codeElement = codeEl as HTMLElement;
+            codeElement.style.display = 'block';
+            codeElement.style.whiteSpace = 'pre';
+            codeElement.style.overflowX = 'visible';
+            codeElement.style.wordWrap = 'normal';
+            codeElement.style.wordBreak = 'normal';
+            codeElement.style.width = 'max-content';
+            codeElement.style.minWidth = '100%';
+          }
+          
+          // 获取pre的父元素
+          const parent = pre.parentNode;
+          if (parent) {
+            // 将pre从当前位置移除
+            parent.removeChild(pre);
+            // 将pre添加到包装器中
+            wrapper.appendChild(pre);
+            // 将包装器添加到原来pre的位置
+            parent.appendChild(wrapper);
+          }
+        }
+      });
+      
       // 获取处理后的HTML
       const enhancedHTML = tempDiv.innerHTML;
       
@@ -200,16 +256,42 @@ export const useEditorStore = defineStore('editor', () => {
           element.style.margin = '10px 0';
           element.style.backgroundColor = '#f8f8f8';
         } else if (element.tagName === 'PRE') {
-          element.style.backgroundColor = '#282c34';
-          element.style.padding = '16px';
-          element.style.borderRadius = '6px';
-          element.style.overflow = 'auto';
-          element.style.fontSize = '14px';
-          element.style.fontFamily = 'Consolas, Monaco, monospace';
-          element.style.color = '#f8f8f2';
-          element.style.margin = '16px 0';
-          element.style.border = '1px solid #444';
-          element.style.position = 'relative';
+          // 创建一个包装容器，用于微信中显示
+          const wrapperDiv = document.createElement('div');
+          wrapperDiv.style.position = 'relative';
+          wrapperDiv.style.width = '100%';
+          wrapperDiv.style.overflowX = 'auto';
+          wrapperDiv.style.backgroundColor = '#282c34';
+          wrapperDiv.style.padding = '16px';
+          wrapperDiv.style.borderRadius = '6px';
+          wrapperDiv.style.margin = '16px 0';
+          wrapperDiv.style.border = '1px solid #444';
+          wrapperDiv.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.5)';
+          
+          // 设置微信富文本编辑器支持的属性
+          wrapperDiv.setAttribute('data-mce-style', 'position: relative; width: 100%; overflow-x: auto; background-color: #282c34; padding: 16px; border-radius: 6px; margin: 16px 0; border: 1px solid #444; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);');
+          
+          // 设置pre元素样式
+          element.style.backgroundColor = 'transparent';
+          element.style.padding = '0';
+          element.style.margin = '0';
+          element.style.border = 'none';
+          element.style.boxShadow = 'none';
+          element.style.width = 'max-content'; // 关键：确保宽度适应内容
+          element.style.minWidth = '100%';
+          element.style.whiteSpace = 'pre';
+          element.style.overflowX = 'visible'; // 在包装器内可见
+          
+          // 获取pre的父元素
+          const parent = element.parentNode;
+          if (parent) {
+            // 将pre从当前位置移除
+            parent.removeChild(element);
+            // 将pre添加到包装器中
+            wrapperDiv.appendChild(element);
+            // 将包装器添加到原来pre的位置
+            parent.appendChild(wrapperDiv);
+          }
         } else if (element.tagName === 'UL' || element.tagName === 'OL') {
           element.style.paddingLeft = '20px';
           element.style.margin = '10px 0';
@@ -224,6 +306,11 @@ export const useEditorStore = defineStore('editor', () => {
             element.style.backgroundColor = 'transparent';
             element.style.padding = '0';
             element.style.color = '#f8f8f2';
+            element.style.display = 'block';
+            element.style.whiteSpace = 'pre';
+            element.style.overflowX = 'auto';
+            element.style.wordWrap = 'normal';
+            element.style.wordBreak = 'normal';
           } else {
             element.style.backgroundColor = '#f0f0f0';
             element.style.padding = '2px 4px';
@@ -274,23 +361,37 @@ export const useEditorStore = defineStore('editor', () => {
         const preElement = codeElement.parentElement as HTMLElement;
         
         if (preElement) {
-          // 确保代码块有正确的样式
+          // 强制设置黑色背景和相关样式
           preElement.style.backgroundColor = '#000000';
           preElement.style.color = '#f8f8f2';
+          preElement.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.5)';
+          preElement.style.border = '1px solid #555';
           preElement.style.padding = '16px';
           preElement.style.borderRadius = '6px';
-          preElement.style.position = 'relative';
-          preElement.style.fontFamily = 'Consolas, Monaco, monospace';
-          preElement.style.fontSize = '14px';
-          preElement.style.lineHeight = '1.5';
-          preElement.style.border = '1px solid #555';
           preElement.style.margin = '16px 0';
-          preElement.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.5)';
+          preElement.style.whiteSpace = 'pre';
+          preElement.style.overflowX = 'auto';
+          preElement.style.maxWidth = '100%';
+          preElement.style.width = 'max-content'; // 关键：确保宽度适应内容
+          preElement.style.minWidth = '100%';
+          
+          // 确保代码元素也有正确的样式
+          const codeEl = preElement.querySelector('code');
+          if (codeEl) {
+            const codeElement = codeEl as HTMLElement;
+            codeElement.style.display = 'block';
+            codeElement.style.whiteSpace = 'pre';
+            codeElement.style.overflowX = 'visible'; // 在pre内可见
+            codeElement.style.wordWrap = 'normal';
+            codeElement.style.wordBreak = 'normal';
+            codeElement.style.width = 'max-content'; // 关键：确保宽度适应内容
+            codeElement.style.minWidth = '100%';
+          }
           
           // 添加微信富文本编辑器支持的属性
           preElement.setAttribute('data-wiz-code-container', 'true');
           preElement.setAttribute('data-mode', 'HTML');
-          preElement.setAttribute('data-mce-style', 'background-color: #000000; color: #f8f8f2; padding: 16px; border-radius: 6px; position: relative; font-family: Consolas, Monaco, monospace; font-size: 14px; line-height: 1.5; border: 1px solid #555; margin: 16px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);');
+          preElement.setAttribute('data-mce-style', 'background-color: #000000; color: #f8f8f2; padding: 16px; border-radius: 6px; position: relative; font-family: Consolas, Monaco, monospace; font-size: 14px; line-height: 1.5; border: 1px solid #555; margin: 16px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); white-space: pre; overflow-x: auto; max-width: 100%;');
           
           // 检查是否是Java代码块
           const isJava = codeElement.className.includes('language-java');
@@ -374,16 +475,99 @@ export const useEditorStore = defineStore('editor', () => {
           preElement.style.padding = '16px';
           preElement.style.borderRadius = '6px';
           preElement.style.margin = '16px 0';
+          preElement.style.whiteSpace = 'pre';
+          preElement.style.overflowX = 'auto';
+          preElement.style.maxWidth = '100%';
+          preElement.style.width = 'max-content'; // 关键：确保宽度适应内容
+          preElement.style.minWidth = '100%';
+          
+          // 确保代码元素也有正确的样式
+          const codeEl = preElement.querySelector('code');
+          if (codeEl) {
+            const codeElement = codeEl as HTMLElement;
+            codeElement.style.display = 'block';
+            codeElement.style.whiteSpace = 'pre';
+            codeElement.style.overflowX = 'visible'; // 在pre内可见
+            codeElement.style.wordWrap = 'normal';
+            codeElement.style.wordBreak = 'normal';
+            codeElement.style.width = 'max-content'; // 关键：确保宽度适应内容
+            codeElement.style.minWidth = '100%';
+          }
+          
+          // 创建一个包装容器，用于微信中显示
+          const wrapperDiv = document.createElement('div');
+          wrapperDiv.className = 'code-block-wrapper-wechat';
+          wrapperDiv.style.position = 'relative';
+          wrapperDiv.style.width = '100%';
+          wrapperDiv.style.overflowX = 'auto';
+          wrapperDiv.style.backgroundColor = '#000000';
+          wrapperDiv.style.borderRadius = '6px';
+          wrapperDiv.style.margin = '16px 0';
+          wrapperDiv.style.border = '1px solid #555';
+          wrapperDiv.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.5)';
+          
+          // 设置微信富文本编辑器支持的属性
+          wrapperDiv.setAttribute('data-mce-style', 'position: relative; width: 100%; overflow-x: auto; background-color: #000000; border-radius: 6px; margin: 16px 0; border: 1px solid #555; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);');
+          
+          // 获取pre的父元素
+          const parent = preElement.parentNode;
+          if (parent) {
+            // 将pre从当前位置移除
+            parent.removeChild(preElement);
+            // 将pre添加到包装器中
+            wrapperDiv.appendChild(preElement);
+            // 将包装器添加到原来pre的位置
+            parent.appendChild(wrapperDiv);
+            
+            // 调整pre在包装器内的样式
+            preElement.style.margin = '0';
+            preElement.style.borderRadius = '0';
+            preElement.style.border = 'none';
+            preElement.style.boxShadow = 'none';
+          }
           
           // 添加微信富文本编辑器支持的属性
           preElement.setAttribute('data-wiz-code-container', 'true');
           preElement.setAttribute('data-mode', 'HTML');
-          preElement.setAttribute('data-mce-style', 'background-color: #000000; color: #f8f8f2; padding: 16px; border-radius: 6px; position: relative; font-family: Consolas, Monaco, monospace; font-size: 14px; line-height: 1.5; border: 1px solid #555; margin: 16px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);');
-        }
-        
-        // 特殊处理Java代码
-        if (lang && lang.toLowerCase() === 'java') {
-          processJavaCodeHighlight(codeBlock as HTMLElement);
+          preElement.setAttribute('data-mce-style', 'background-color: #000000; color: #f8f8f2; padding: 16px; border-radius: 6px; position: relative; font-family: Consolas, Monaco, monospace; font-size: 14px; line-height: 1.5; border: 1px solid #555; margin: 16px 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); white-space: pre; overflow-x: auto; max-width: 100%;');
+          
+          // 检查是否是Java代码块
+          const isJava = className.includes('language-java');
+          
+          // 获取语言信息
+          // 这里已经在前面获取过了，不需要重复获取
+          
+          // 添加语言标签
+          if (lang) {
+            // 移除可能已存在的语言标签
+            const existingLabels = preElement.querySelectorAll('.lang-label');
+            existingLabels.forEach(label => label.remove());
+            
+            const langLabel = document.createElement('div');
+            langLabel.className = 'lang-label';
+            langLabel.textContent = lang.charAt(0).toUpperCase() + lang.slice(1);
+            langLabel.style.position = 'absolute';
+            langLabel.style.top = '0';
+            langLabel.style.right = '0';
+            langLabel.style.backgroundColor = isJava ? '#ff8c00' : '#607D8B';
+            langLabel.style.color = '#000000';
+            langLabel.style.padding = '2px 8px';
+            langLabel.style.fontSize = '12px';
+            langLabel.style.borderBottomLeftRadius = '5px';
+            langLabel.style.fontWeight = 'bold';
+            langLabel.style.zIndex = '5';
+            
+            // 为微信公众号设置特殊属性
+            langLabel.setAttribute('data-mce-style', `position: absolute; top: 0; right: 0; background-color: ${isJava ? '#ff8c00' : '#607D8B'}; color: #000000; padding: 2px 8px; font-size: 12px; border-bottom-left-radius: 5px; font-weight: bold; z-index: 5;`);
+            
+            preElement.insertBefore(langLabel, preElement.firstChild);
+          }
+          
+          // 处理Java代码块的特殊高亮
+          if (isJava) {
+            // 为所有高亮元素添加内联样式，以确保微信公众号能正确显示
+            processHighlightElements(codeBlock as HTMLElement);
+          }
         }
       });
     } catch (e) {
@@ -476,6 +660,41 @@ export const useEditorStore = defineStore('editor', () => {
     historyIndex.value = history.value.length - 1
   }
   
+  // 导出为Markdown文件
+  function exportToMarkdown() {
+    try {
+      // 创建Blob对象
+      const blob = new Blob([content.value], { type: 'text/markdown;charset=utf-8' });
+      
+      // 创建下载链接
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      
+      // 设置文件名 - 使用当前日期时间作为默认文件名
+      const now = new Date();
+      const fileName = `markdown_${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}.md`;
+      
+      // 设置下载链接属性
+      link.href = url;
+      link.download = fileName;
+      
+      // 添加到文档并触发点击
+      document.body.appendChild(link);
+      link.click();
+      
+      // 清理
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+      return true;
+    } catch (err) {
+      console.error('导出Markdown文件失败:', err);
+      return false;
+    }
+  }
+  
   // 撤销
   function undo() {
     if (historyIndex.value > 0) {
@@ -513,6 +732,7 @@ export const useEditorStore = defineStore('editor', () => {
     copyToClipboard,
     copyToWechat,
     addHistory,
+    exportToMarkdown,
     undo,
     redo
   }
