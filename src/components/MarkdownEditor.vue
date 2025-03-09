@@ -204,6 +204,7 @@ const themes = computed(() => editorStore.themes)
 const showPreview = computed(() => editorStore.showPreview)
 const isFullscreen = computed(() => editorStore.isFullscreen)
 const scrollToLineNumber = computed(() => editorStore.scrollToLineNumber)
+const scrollOptions = computed(() => editorStore.scrollOptions)
 
 // 编辑器和预览区域的引用
 const editorTextarea = ref(null)
@@ -350,7 +351,8 @@ public UserDetails loadUserByUsername(String username) {
 // 监听滚动行号的变化
 watch(scrollToLineNumber, (newLineNumber) => {
   if (newLineNumber > 0) {
-    scrollToLine(newLineNumber)
+    // 使用存储的滚动选项
+    scrollToLine(newLineNumber, scrollOptions.value)
   }
 })
 
@@ -360,6 +362,7 @@ watch(showPreview, () => {
 })
 
 // 处理编辑器滚动
+let lastScrollTop = 0;
 function handleEditorScroll() {
   if (!editorTextarea.value || !showPreview.value || !previewDiv.value) return
   
@@ -368,13 +371,17 @@ function handleEditorScroll() {
   const scrollHeight = editorTextarea.value.scrollHeight
   const clientHeight = editorTextarea.value.clientHeight
   
+  // 检测滚动方向（保留此变量以便于调试）
+  const isScrollingDown = scrollTop > lastScrollTop;
+  lastScrollTop = scrollTop;
+  
   // 计算滚动比例
   const scrollRatio = scrollTop / (scrollHeight - clientHeight)
   
   // 更新滚动条位置
   updateThumbPosition()
   
-  // 同步预览区域滚动
+  // 同步预览区域（无论滚动方向）
   const previewContent = previewDiv.value.querySelector('.preview-content > div')
   if (previewContent) {
     const previewScrollHeight = previewContent.scrollHeight
@@ -421,7 +428,7 @@ function updateThumbPosition() {
 }
 
 // 滚动到指定行
-function scrollToLine(lineNumber) {
+function scrollToLine(lineNumber, options = { smooth: true }) {
   // 滚动编辑区域
   if (editorTextarea.value) {
     const lines = content.value.split('\n')
@@ -443,6 +450,9 @@ function scrollToLine(lineNumber) {
     
     // 更新滚动条位置
     updateThumbPosition()
+    
+    // 更新最后滚动位置，防止自动滚动效果
+    lastScrollTop = scrollTop;
   }
   
   // 滚动预览区域
@@ -468,7 +478,16 @@ function scrollToLine(lineNumber) {
         // 查找预览区域中匹配的标题
         for (const heading of headings) {
           if (heading.textContent.trim() === targetHeadingText) {
-            heading.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            // 使用用户指定的滚动行为
+            heading.scrollIntoView({ 
+              behavior: options.smooth ? 'smooth' : 'auto', 
+              block: 'start' 
+            })
+            
+            // 更新最后预览滚动位置
+            if (heading.offsetTop) {
+              lastPreviewScrollTop = heading.offsetTop;
+            }
             break
           }
         }
@@ -879,20 +898,56 @@ onUnmounted(() => {
 // 处理右键菜单
 function showContextMenu(e) {
   e.preventDefault()
-  contextMenuVisible.value = true
-  contextMenuStyle.value = {
-    top: e.clientY + 'px',
-    left: e.clientX + 'px'
+  
+  // 获取编辑区域的位置信息
+  const editorRect = e.target.getBoundingClientRect()
+  
+  // 计算相对于编辑区域的位置
+  let x = e.clientX
+  let y = e.clientY
+  
+  // 确保菜单不会超出屏幕右侧
+  const menuWidth = 150 // 菜单的大致宽度
+  if (x + menuWidth > window.innerWidth) {
+    x = window.innerWidth - menuWidth - 10
   }
   
+  // 确保菜单不会超出屏幕底部
+  const menuHeight = 300 // 菜单的大致高度
+  if (y + menuHeight > window.innerHeight) {
+    y = window.innerHeight - menuHeight - 10
+  }
+  
+  // 设置菜单位置
+  contextMenuStyle.value = {
+    top: y + 'px',
+    left: x + 'px',
+    zIndex: 1000 // 确保菜单在最上层
+  }
+  
+  // 显示菜单
+  contextMenuVisible.value = true
+  
   // 点击其他区域关闭菜单
-  document.addEventListener('click', closeContextMenu)
+  setTimeout(() => {
+    document.addEventListener('click', closeContextMenu)
+    document.addEventListener('contextmenu', closeContextMenu)
+    
+    // 阻止事件冒泡，防止菜单立即关闭
+    const menuElement = document.querySelector('.context-menu')
+    if (menuElement) {
+      menuElement.addEventListener('click', (event) => {
+        event.stopPropagation()
+      })
+    }
+  }, 0)
 }
 
 // 关闭右键菜单
 function closeContextMenu() {
   contextMenuVisible.value = false
   document.removeEventListener('click', closeContextMenu)
+  document.removeEventListener('contextmenu', closeContextMenu)
 }
 
 // 处理颜色命令
@@ -1029,23 +1084,27 @@ function applyHeading(level) {
   
   // 获取当前行的起始位置
   let lineStart = start
-  while (lineStart > 0 && content.value.charAt(lineStart - 1) !== '\n') {
+  const text = editorStore.content
+  while (lineStart > 0 && text[lineStart - 1] !== '\n') {
     lineStart--
   }
   
-  // 获取当前行的内容
-  const lineEnd = content.value.indexOf('\n', start)
-  const currentLine = content.value.substring(lineStart, lineEnd === -1 ? content.value.length : lineEnd)
+  // 获取当前行的文本
+  let lineEnd = start
+  while (lineEnd < text.length && text[lineEnd] !== '\n') {
+    lineEnd++
+  }
+  const line = text.substring(lineStart, lineEnd)
   
   // 移除现有的标题标记
-  const cleanLine = currentLine.replace(/^#+\s*/, '')
+  const cleanLine = line.replace(/^#+\s*/, '')
   
   // 添加新的标题标记
   const heading = '#'.repeat(level) + ' ' + cleanLine
   
   // 替换当前行
-  const newContent = content.value.substring(0, lineStart) + heading + content.value.substring(lineEnd === -1 ? content.value.length : lineEnd)
-  editorStore.setContent(newContent)
+  const newText = text.substring(0, lineStart) + heading + text.substring(lineEnd)
+  editorStore.setContent(newText)
   
   // 设置光标位置
   setTimeout(() => {
@@ -1060,6 +1119,7 @@ function applyHeading(level) {
     }
   }, 0)
   
+  // 关闭右键菜单
   closeContextMenu()
 }
 
@@ -1078,7 +1138,7 @@ function applyStyle(style) {
   }
   
   let styleMarker = ''
-  let styleText = ''
+  let styleText = '文本'
   
   switch (style) {
     case 'bold':
@@ -1094,14 +1154,17 @@ function applyStyle(style) {
       styleText = '删除线文本'
       break
     default:
-      return
+      break
   }
+  
+  const text = editorStore.content
   
   if (start === end) {
     // 没有选中文本，插入占位符
-    insertText(`${styleMarker}${styleText}${styleMarker}`)
+    const newText = text.substring(0, start) + styleMarker + styleText + styleMarker + text.substring(end)
+    editorStore.setContent(newText)
     
-    // 设置光标位置到占位文本中间
+    // 选中插入的占位符文本
     const textStart = start + styleMarker.length
     setTimeout(() => {
       editorTextarea.value.focus()
@@ -1114,12 +1177,11 @@ function applyStyle(style) {
       }
     }, 0)
   } else {
-    // 选中了文本，应用样式
-    const selectedText = content.value.substring(start, end)
-    const styledText = `${styleMarker}${selectedText}${styleMarker}`
-    
-    const newContent = content.value.substring(0, start) + styledText + content.value.substring(end)
-    editorStore.setContent(newContent)
+    // 有选中文本，添加样式标记
+    const selectedText = text.substring(start, end)
+    const styledText = styleMarker + selectedText + styleMarker
+    const newText = text.substring(0, start) + styledText + text.substring(end)
+    editorStore.setContent(newText)
     
     // 保持原来的选区，但包含样式标记
     setTimeout(() => {
@@ -1134,6 +1196,7 @@ function applyStyle(style) {
     }, 0)
   }
   
+  // 关闭右键菜单
   closeContextMenu()
 }
 
@@ -1192,6 +1255,8 @@ function showTextColorPicker() {
   colorPickerTitle.value = '选择文字颜色'
   colorPickerType.value = 'text'
   pickerColor.value = currentTextColor.value
+  
+  // 关闭右键菜单
   closeContextMenu()
 }
 
@@ -1201,6 +1266,8 @@ function showBgColorPicker() {
   colorPickerTitle.value = '选择背景颜色'
   colorPickerType.value = 'bg'
   pickerColor.value = currentBgColor.value
+  
+  // 关闭右键菜单
   closeContextMenu()
 }
 
@@ -1327,6 +1394,7 @@ function debugPreviewState() {
 }
 
 // 处理预览区域滚动
+let lastPreviewScrollTop = 0;
 function handlePreviewScroll(e) {
   if (!editorTextarea.value || !showPreview.value) return
   
@@ -1336,10 +1404,14 @@ function handlePreviewScroll(e) {
   const scrollHeight = previewContent.scrollHeight
   const clientHeight = previewContent.clientHeight
   
+  // 检测滚动方向（保留此变量以便于调试）
+  const isScrollingDown = scrollTop > lastPreviewScrollTop;
+  lastPreviewScrollTop = scrollTop;
+  
   // 计算滚动比例
   const scrollRatio = scrollTop / (scrollHeight - clientHeight)
   
-  // 同步编辑器区域滚动
+  // 同步编辑器区域滚动（无论滚动方向）
   const editorScrollHeight = editorTextarea.value.scrollHeight
   const editorClientHeight = editorTextarea.value.clientHeight
   editorTextarea.value.scrollTop = scrollRatio * (editorScrollHeight - editorClientHeight)
@@ -1505,6 +1577,9 @@ onUnmounted(() => {
 function handleScrollbarTrackClick(e) {
   if (!editorTextarea.value || !editorContent.value || !showPreview.value) return
   
+  // 设置为用户主动滚动
+  isUserScrolling = true;
+  
   // 获取点击位置相对于轨道顶部的距离
   const trackRect = e.currentTarget.getBoundingClientRect()
   const clickPosition = e.clientY - trackRect.top
@@ -1517,14 +1592,31 @@ function handleScrollbarTrackClick(e) {
   // 计算点击位置对应的滚动比例
   const scrollRatio = clickPosition / trackRect.height
   
+  // 获取当前滚动位置
+  const currentScrollTop = editorTextarea.value.scrollTop
+  
+  // 计算新的滚动位置
+  const newScrollTop = maxScrollTop * scrollRatio
+  
+  // 检测滚动方向（保留此变量以便于调试）
+  const isScrollingDown = newScrollTop > currentScrollTop
+  
   // 设置编辑器滚动位置
-  editorTextarea.value.scrollTop = maxScrollTop * scrollRatio
+  editorTextarea.value.scrollTop = newScrollTop
+  
+  // 更新最后滚动位置
+  lastScrollTop = newScrollTop
   
   // 更新滚动条位置
   updateThumbPosition()
   
-  // 同步预览区域滚动
+  // 同步预览区域滚动（无论滚动方向）
   syncPreviewScroll()
+  
+  // 短暂延迟后重置标志
+  setTimeout(() => {
+    isUserScrolling = false;
+  }, 500);
 }
 
 // 同步预览区域滚动
@@ -1536,15 +1628,21 @@ function syncPreviewScroll() {
   const scrollHeight = editorTextarea.value.scrollHeight
   const clientHeight = editorTextarea.value.clientHeight
   
+  // 检测滚动方向（保留此变量以便于调试）
+  const isScrollingDown = scrollTop > lastScrollTop;
+  lastScrollTop = scrollTop;
+  
   // 计算滚动比例
   const scrollRatio = scrollTop / (scrollHeight - clientHeight)
   
-  // 同步预览区域滚动
-  const previewContent = previewDiv.value.querySelector('.preview-content > div')
-  if (previewContent) {
-    const previewScrollHeight = previewContent.scrollHeight
-    const previewClientHeight = previewContent.clientHeight
-    previewContent.scrollTop = scrollRatio * (previewScrollHeight - previewClientHeight)
+  // 只有在用户主动滚动时才同步预览区域滚动
+  if (isUserScrolling) {
+    const previewContent = previewDiv.value.querySelector('.preview-content > div')
+    if (previewContent) {
+      const previewScrollHeight = previewContent.scrollHeight
+      const previewClientHeight = previewContent.clientHeight
+      previewContent.scrollTop = scrollRatio * (previewScrollHeight - previewClientHeight)
+    }
   }
 }
 </script>
@@ -2471,5 +2569,34 @@ function syncPreviewScroll() {
   background-color: white;
   border-left: none; /* 移除左边框，由滚动条区域提供分隔 */
   z-index: 999;  /* 与编辑区域保持同一层级 */
+}
+
+/* 右键菜单样式 */
+.context-menu {
+  position: fixed;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  padding: 5px 0;
+  min-width: 150px;
+  z-index: 1000;
+}
+
+.context-menu-item {
+  padding: 8px 15px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+}
+
+.context-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.context-menu-divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 5px 0;
 }
 </style> 

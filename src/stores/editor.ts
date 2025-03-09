@@ -26,6 +26,7 @@ export const useEditorStore = defineStore('editor', () => {
   
   // 要滚动到的行号
   const scrollToLineNumber = ref(0)
+  const scrollOptions = ref({ smooth: true })
   
   // 切换全屏状态
   function toggleFullscreen() {
@@ -54,8 +55,12 @@ export const useEditorStore = defineStore('editor', () => {
   }
   
   // 滚动到指定行
-  function scrollToLine(lineNumber: number) {
+  function scrollToLine(lineNumber: number, options?: { smooth: boolean }) {
     scrollToLineNumber.value = lineNumber
+    // 存储滚动选项
+    if (options !== undefined) {
+      scrollOptions.value = options
+    }
     // 一段时间后重置，以便下次调用仍然生效（即使是相同行号）
     setTimeout(() => {
       scrollToLineNumber.value = 0
@@ -446,6 +451,7 @@ export const useEditorStore = defineStore('editor', () => {
     showPreview,
     isFullscreen,
     scrollToLineNumber,
+    scrollOptions,
     toggleFullscreen,
     togglePreview,
     setTheme,
