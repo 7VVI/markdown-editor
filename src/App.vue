@@ -190,13 +190,19 @@ html, body {
 /* 侧边栏样式 */
 .app-sidebar {
   width: 220px;
+  min-width: 220px; /* 添加最小宽度确保不会缩小 */
+  flex: 0 0 220px; /* 设置flex属性为0 0 auto，防止伸缩 */
   background-color: #fff;
   border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   z-index: 10;
-  height: 100%; /* 确保大纲占满整个高度 */
+  height: calc(100vh - 50px - 30px); /* 确保大纲占满整个可视区域高度 */
+  box-sizing: border-box; /* 确保边框包含在宽度内 */
+  position: fixed; /* 添加固定定位 */
+  left: 0; /* 固定在左侧 */
+  top: 50px; /* 固定在顶部栏下方 */
 }
 
 /* 侧边栏标题区域样式 */
@@ -222,7 +228,23 @@ html, body {
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden; /* 防止横向滚动 */
   border-top: none;
+  scrollbar-width: thin; /* Firefox */
+}
+
+/* 为Webkit浏览器自定义滚动条样式 */
+.sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1;
+  border-radius: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background-color: transparent;
 }
 
 /* 大纲列表样式 */
@@ -312,11 +334,11 @@ html, body {
 
 /* 编辑器内容区样式 */
 .app-content {
+  margin-left: 220px; /* 与侧边栏宽度相同 */
   flex: 1;
-  overflow: hidden;
-  padding: 0;
-  min-height: 0; /* 修复Flex布局中的溢出问题 */
-  display: flex;
+  position: relative;
+  height: 100%;
+  overflow: auto;
 }
 
 /* 底部栏样式 */

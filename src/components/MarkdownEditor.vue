@@ -34,113 +34,43 @@
       </div>
     </div>
     
-    <!-- Markdown工具栏 -->
-    <div class="markdown-toolbar">
-      <div class="toolbar-left">
-        <el-button-group>
-          <el-button @click="insertText('# ')" title="标题1">H1</el-button>
-          <el-button @click="insertText('## ')" title="标题2">H2</el-button>
-          <el-button @click="insertText('### ')" title="标题3">H3</el-button>
-          <el-button @click="insertText('#### ')" title="标题4">H4</el-button>
-          <el-button @click="insertText('##### ')" title="标题5">H5</el-button>
-          <el-button @click="insertText('**粗体**')" title="粗体">
-            <el-icon><Bold /></el-icon>
-          </el-button>
-          <el-button @click="insertText('*斜体*')" title="斜体">
-            <el-icon><Italic /></el-icon>
-          </el-button>
-          <el-button @click="insertText('~~删除线~~')" title="删除线">
-            <el-icon><DeleteFilled /></el-icon>
-          </el-button>
-          <el-button @click="insertText('[链接文字](链接URL)')" title="链接">
-            <el-icon><Link /></el-icon>
-          </el-button>
-          <el-button @click="insertText('![图片描述](图片URL)')" title="图片">
-            <el-icon><Picture /></el-icon>
-          </el-button>
-          <el-button @click="insertText('> 引用文字')" title="引用">
-            <el-icon><ChatDotRound /></el-icon>
-          </el-button>
-          <el-button @click="insertText('- 列表项')" title="无序列表">
-            <el-icon><List /></el-icon>
-          </el-button>
-          <el-button @click="insertText('1. 列表项')" title="有序列表">
-            <el-icon><Finished /></el-icon>
-          </el-button>
-          <el-button @click="insertText('```\n代码块\n```')" title="代码块">
-            <el-icon><Cpu /></el-icon>
-          </el-button>
-          <el-button @click="insertText('| 表头1 | 表头2 |\n| ------ | ------ |\n| 单元格1 | 单元格2 |')" title="表格">
-            <el-icon><Grid /></el-icon>
-          </el-button>
-          <el-dropdown trigger="click" @command="handleColorCommand">
-            <el-button title="文字颜色">
-              <el-icon><Brush /></el-icon>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="red">
-                  <span class="color-preview" style="background-color: red;"></span>红色
-                </el-dropdown-item>
-                <el-dropdown-item command="blue">
-                  <span class="color-preview" style="background-color: blue;"></span>蓝色
-                </el-dropdown-item>
-                <el-dropdown-item command="green">
-                  <span class="color-preview" style="background-color: green;"></span>绿色
-                </el-dropdown-item>
-                <el-dropdown-item command="orange">
-                  <span class="color-preview" style="background-color: orange;"></span>橙色
-                </el-dropdown-item>
-                <el-dropdown-item command="purple">
-                  <span class="color-preview" style="background-color: purple;"></span>紫色
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <el-dropdown trigger="click" @command="handleBgColorCommand">
-            <el-button title="背景颜色">
-              <el-icon><Brush /></el-icon>
-              <span>BG</span>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="red">
-                  <span class="color-preview" style="background-color: red;"></span>红色背景
-                </el-dropdown-item>
-                <el-dropdown-item command="blue">
-                  <span class="color-preview" style="background-color: blue;"></span>蓝色背景
-                </el-dropdown-item>
-                <el-dropdown-item command="green">
-                  <span class="color-preview" style="background-color: green;"></span>绿色背景
-                </el-dropdown-item>
-                <el-dropdown-item command="yellow">
-                  <span class="color-preview" style="background-color: yellow;"></span>黄色背景
-                </el-dropdown-item>
-                <el-dropdown-item command="gray">
-                  <span class="color-preview" style="background-color: gray;"></span>灰色背景
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </el-button-group>
-      </div>
+    <!-- 移动到这里的格式工具栏 -->
+    <div class="simple-format-toolbar">
+      <button @click="insertText('# ')" title="标题1">H1</button>
+      <button @click="insertText('## ')" title="标题2">H2</button>
+      <button @click="insertText('### ')" title="标题3">H3</button>
+      <button @click="insertText('#### ')" title="标题4">H4</button>
+      <button @click="insertText('##### ')" title="标题5">H5</button>
+      <button @click="insertText('**粗体**')" title="粗体">B</button>
+      <button @click="insertText('*斜体*')" title="斜体">I</button>
+      <button @click="insertText('~~删除线~~')" title="删除线">S</button>
+      <button @click="insertText('[链接文字](链接URL)')" title="链接">🔗</button>
+      <button @click="insertText('![图片描述](图片URL)')" title="图片">🖼</button>
+      <button @click="insertText('> 引用文字')" title="引用">❝</button>
+      <button @click="insertText('- 列表项')" title="列表">•</button>
+      <button @click="insertText('1. 列表项')" title="有序列表">1.</button>
+      <button @click="insertText('```\n代码块\n```')" title="代码块">💻</button>
+      <button @click="insertText('| 表头1 | 表头2 |\n| ------ | ------ |\n| 单元格1 | 单元格2 |')" title="表格">▦</button>
     </div>
     
-    <div class="editor-content" ref="editorContent" :class="{ 'show-divider': showPreview }">
-      <div class="editor-input" :class="{ 'full-width': !showPreview }">
-        <textarea
-          ref="editorTextarea"
-          v-model="content"
-          @input="updateContent"
-          @scroll="handleEditorScroll"
-          @contextmenu="showContextMenu"
-          @keydown="handleKeyDown"
-          placeholder="请输入Markdown内容..."
-        ></textarea>
-      </div>
-      <!-- 预览区域 - 始终显示 -->
-      <div class="editor-preview" :style="{ display: showPreview ? 'block' : 'none' }">
-        <div v-html="renderedContent"></div>
+    <!-- 编辑器主体 -->
+    <div class="editor-content" ref="editorContent">
+      <div class="editor-container">
+        <div class="editor-input" :class="{ 'full-width': !showPreview }">
+          <textarea
+            ref="editorTextarea"
+            v-model="content"
+            @input="updateContent"
+            @contextmenu="showContextMenu"
+            @keydown="handleKeyDown"
+            placeholder="请输入Markdown内容..."
+          ></textarea>
+        </div>
+        
+        <!-- 预览区域 -->
+        <div class="editor-preview" ref="previewDiv" v-show="showPreview">
+          <div v-html="renderedContent"></div>
+        </div>
       </div>
     </div>
     
@@ -350,7 +280,7 @@ public UserDetails loadUserByUsername(String username) {
       }
     }
   });
-
+  
   // 初始化时触发一次大纲更新
   updateOutline();
   
@@ -376,6 +306,29 @@ watch(showPreview, () => {
   // 预览状态变化时的处理
 })
 
+// 处理编辑器滚动
+function handleEditorScroll() {
+  if (!editorTextarea.value || !showPreview.value) return
+  
+  // 获取滚动位置和内容高度
+  const scrollTop = editorTextarea.value.scrollTop
+  const scrollHeight = editorTextarea.value.scrollHeight
+  const clientHeight = editorTextarea.value.clientHeight
+  
+  // 计算滚动比例
+  const scrollRatio = scrollTop / (scrollHeight - clientHeight)
+  
+  // 更新滚动条位置
+  updateThumbPosition()
+  
+  // 同步预览区域滚动
+  if (previewDiv.value) {
+    const previewScrollHeight = previewDiv.value.scrollHeight
+    const previewClientHeight = previewDiv.value.clientHeight
+    previewDiv.value.scrollTop = scrollRatio * (previewScrollHeight - previewClientHeight)
+  }
+}
+
 // 更新滚动条高度和位置
 function updateScrollbarThumb() {
   if (!editorTextarea.value || !editorContent.value || !scrollbarThumb.value || !showPreview.value) return
@@ -385,10 +338,9 @@ function updateScrollbarThumb() {
   
   // 计算滚动条高度比例
   const ratio = editorHeight / contentHeight
-  thumbHeight.value = Math.max(30, editorHeight * ratio)
   
-  // 更新滚动条位置
-  updateThumbPosition()
+  // 设置滚动条高度，最小20px
+  thumbHeight.value = Math.max(20, editorHeight * ratio)
 }
 
 // 更新滚动条位置
@@ -401,62 +353,17 @@ function updateThumbPosition() {
   
   // 计算滚动条位置
   const maxScrollTop = contentHeight - editorHeight
+  
+  // 防止除以零
+  if (maxScrollTop <= 0) {
+    thumbPosition.value = 0
+    return
+  }
+  
   const scrollRatio = scrollTop / maxScrollTop
   const maxThumbTop = editorHeight - thumbHeight.value
   
   thumbPosition.value = maxThumbTop * scrollRatio
-}
-
-// 处理编辑器滚动
-function handleEditorScroll() {
-  // 简化实现，不再同步预览区域滚动
-}
-
-// 处理预览区域滚动
-function handlePreviewScroll() {
-  // 简化实现，不再同步编辑器滚动
-}
-
-// 开始拖动滚动条
-function startDrag(e) {
-  isDragging.value = true
-  lastY.value = e.clientY
-  
-  // 防止选中文本
-  e.preventDefault()
-}
-
-// 处理鼠标移动
-function handleMouseMove(e) {
-  if (!isDragging.value || !showPreview.value) return
-  
-  const deltaY = e.clientY - lastY.value
-  lastY.value = e.clientY
-  
-  // 更新滚动条位置
-  const editorHeight = editorContent.value.clientHeight
-  const maxThumbTop = editorHeight - thumbHeight.value
-  
-  thumbPosition.value = Math.max(0, Math.min(maxThumbTop, thumbPosition.value + deltaY))
-  
-  // 计算滚动比例
-  const scrollRatio = thumbPosition.value / maxThumbTop
-  
-  // 同步编辑器和预览区域滚动
-  if (editorTextarea.value) {
-    const maxScrollTop = editorTextarea.value.scrollHeight - editorTextarea.value.clientHeight
-    editorTextarea.value.scrollTop = maxScrollTop * scrollRatio
-  }
-  
-  if (previewDiv.value) {
-    const maxScrollTop = previewDiv.value.scrollHeight - previewDiv.value.clientHeight
-    previewDiv.value.scrollTop = maxScrollTop * scrollRatio
-  }
-}
-
-// 结束拖动
-function endDrag() {
-  isDragging.value = false
 }
 
 // 滚动到指定行
@@ -561,6 +468,17 @@ function forceHighlightCodeBlocks(html) {
       const lang = langMatch ? langMatch[1] : '';
       console.log(`处理代码块${index + 1}，语言:`, lang || '未指定');
       
+      // 获取父元素并设置强制黑色背景
+      const preElement = codeBlock.parentElement;
+      if (preElement) {
+        // 强制设置黑色背景和相关样式
+        preElement.style.backgroundColor = '#000000';
+        preElement.style.color = '#f8f8f2';
+        preElement.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.5)';
+        preElement.style.border = '1px solid #555';
+        preElement.style.padding = '16px';
+      }
+      
       if (lang && lang.toLowerCase() === 'java') {
         // 手动处理Java代码高亮
         const code = codeBlock.textContent;
@@ -575,7 +493,6 @@ function forceHighlightCodeBlocks(html) {
           codeBlock.innerHTML = processedCode;
           
           // 增强Java代码块的样式，添加更醒目的样式类
-          const preElement = codeBlock.parentElement;
           if (preElement) {
             preElement.classList.add('java-code-block');
             
@@ -588,7 +505,7 @@ function forceHighlightCodeBlocks(html) {
               langLabel.style.top = '0';
               langLabel.style.right = '0';
               langLabel.style.backgroundColor = '#ff8c00';
-              langLabel.style.color = '#282c34';
+              langLabel.style.color = '#000000';
               langLabel.style.padding = '2px 8px';
               langLabel.style.fontSize = '12px';
               langLabel.style.borderBottomLeftRadius = '5px';
@@ -622,7 +539,7 @@ function forceHighlightCodeBlocks(html) {
             langLabel.style.top = '0';
             langLabel.style.right = '0';
             langLabel.style.backgroundColor = '#607D8B';
-            langLabel.style.color = '#fff';
+            langLabel.style.color = '#000000';
             langLabel.style.padding = '2px 8px';
             langLabel.style.fontSize = '12px';
             langLabel.style.borderBottomLeftRadius = '5px';
@@ -1332,11 +1249,100 @@ function debugRenderedHtml() {
   } catch (e) {
     console.error('手动高亮测试失败:', e);
   }
+  
+  // 检查页面中的pre元素的背景色
+  const preElements = document.querySelectorAll('.editor-preview pre');
+  console.log('页面中的pre元素数量:', preElements.length);
+  preElements.forEach((pre, index) => {
+    const computedStyle = window.getComputedStyle(pre);
+    console.log(`pre元素 ${index + 1} 背景色:`, computedStyle.backgroundColor);
+    console.log(`pre元素 ${index + 1} 边框:`, computedStyle.border);
+    console.log(`pre元素 ${index + 1} 阴影:`, computedStyle.boxShadow);
+    
+    // 强制设置黑色背景
+    pre.style.backgroundColor = '#000000 !important';
+    pre.style.color = '#f8f8f2 !important';
+    pre.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.5) !important';
+    pre.style.border = '1px solid #555 !important';
+  });
 }
 
 // 添加调试预览状态按钮
 function debugPreviewState() {
   console.log('预览状态:', showPreview.value)
+}
+
+// 处理预览区域滚动
+function handlePreviewScroll() {
+  if (!previewDiv.value || !showPreview.value) return
+  
+  // 获取滚动位置和内容高度
+  const scrollTop = previewDiv.value.scrollTop
+  const scrollHeight = previewDiv.value.scrollHeight
+  const clientHeight = previewDiv.value.clientHeight
+  
+  // 计算滚动比例
+  const scrollRatio = scrollTop / (scrollHeight - clientHeight)
+  
+  // 更新滚动条位置
+  updateThumbPosition()
+  
+  // 同步编辑器区域滚动
+  if (editorTextarea.value) {
+    const editorScrollHeight = editorTextarea.value.scrollHeight
+    const editorClientHeight = editorTextarea.value.clientHeight
+    editorTextarea.value.scrollTop = scrollRatio * (editorScrollHeight - editorClientHeight)
+  }
+}
+
+// 开始拖动滚动条
+function startDrag(e) {
+  isDragging.value = true
+  lastY.value = e.clientY
+  
+  // 防止选中文本
+  e.preventDefault()
+  
+  // 添加全局鼠标事件监听
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', endDrag)
+}
+
+// 处理鼠标移动
+function handleMouseMove(e) {
+  if (!isDragging.value || !showPreview.value) return
+  
+  const deltaY = e.clientY - lastY.value
+  lastY.value = e.clientY
+  
+  // 更新滚动条位置
+  const editorHeight = editorContent.value.clientHeight
+  const maxThumbTop = editorHeight - thumbHeight.value
+  
+  thumbPosition.value = Math.max(0, Math.min(maxThumbTop, thumbPosition.value + deltaY))
+  
+  // 计算滚动比例
+  const scrollRatio = thumbPosition.value / maxThumbTop
+  
+  // 同步编辑器和预览区域滚动
+  if (editorTextarea.value) {
+    const maxScrollTop = editorTextarea.value.scrollHeight - editorTextarea.value.clientHeight
+    editorTextarea.value.scrollTop = maxScrollTop * scrollRatio
+  }
+  
+  if (previewDiv.value) {
+    const maxScrollTop = previewDiv.value.scrollHeight - previewDiv.value.clientHeight
+    previewDiv.value.scrollTop = maxScrollTop * scrollRatio
+  }
+}
+
+// 结束拖动
+function endDrag() {
+  isDragging.value = false
+  
+  // 移除全局鼠标事件监听
+  document.removeEventListener('mousemove', handleMouseMove)
+  document.removeEventListener('mouseup', endDrag)
 }
 </script>
 
@@ -1344,10 +1350,12 @@ function debugPreviewState() {
 .markdown-editor {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
   width: 100%;
   overflow: hidden;
-  padding-top: 50px; /* 为固定的标题栏留出空间 */
+  padding: 0;
+  box-sizing: border-box;
+  border: 1px solid #dcdfe6;
 }
 
 .editor-header {
@@ -1355,14 +1363,11 @@ function debugPreviewState() {
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  height: 50px;
+  height: 40px;
   background-color: #f5f7fa;
   border-bottom: 1px solid #dcdfe6;
   width: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 100;
+  position: relative;
   box-sizing: border-box;
 }
 
@@ -1383,32 +1388,62 @@ function debugPreviewState() {
   gap: 8px;
 }
 
-.markdown-toolbar {
+/* 调整简单格式工具栏样式 */
+.simple-format-toolbar {
   display: flex;
-  justify-content: space-between;
-  padding: 8px 16px;
-  background-color: #f5f7fa;
-  border-bottom: 1px solid #dcdfe6;
+  padding: 4px 10px;
+  background-color: white;
+  border-bottom: 1px solid #eaeaea;
   width: 100%;
   box-sizing: border-box;
-  margin-top: 0; /* 不需要额外的顶部间距，因为App.vue已经添加了padding-top */
-}
-
-.toolbar-left {
-  display: flex;
-  flex: 1;
-  gap: 8px;
   overflow-x: auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  margin: 0;
+  position: relative;
 }
 
+.simple-format-toolbar button {
+  margin-right: 8px;
+  padding: 2px 6px;
+  border: none;
+  background-color: transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #606266;
+  outline: none;
+  transition: all 0.15s;
+}
+
+.simple-format-toolbar button:hover {
+  background-color: #f0f2f5;
+  color: #409eff;
+}
+
+.simple-format-toolbar button:active {
+  background-color: #e6e8eb;
+}
+
+/* 调整编辑器内容区域的样式 */
 .editor-content {
   display: flex;
   flex: 1;
   position: relative;
   overflow: hidden;
-  min-height: 500px; /* 确保编辑器有足够的高度 */
-  border: 1px solid #dcdfe6;
-  margin-top: 10px;
+  height: calc(100vh - 80px);
+  border: none;
+  margin: 0;
+  background-color: white;
+}
+
+.editor-container {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .editor-input {
@@ -1416,12 +1451,8 @@ function debugPreviewState() {
   height: 100%;
   position: relative;
   min-height: 0;
-  padding-right: 12px;
   max-width: 50%;
-}
-
-.editor-input.full-width {
-  max-width: 100%;
+  display: flex;
 }
 
 .editor-input textarea {
@@ -1436,25 +1467,24 @@ function debugPreviewState() {
   color: #303133;
   background-color: #ffffff;
   outline: none;
-  overflow-y: auto;
   box-sizing: border-box;
-}
-
-/* 隐藏原生滚动条 */
-.editor-input textarea::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+  overflow: hidden;
 }
 
 .editor-preview {
   flex: 1;
   height: 100%;
   padding: 16px;
-  overflow-y: auto;
+  overflow: hidden;
   background-color: #ffffff;
   box-sizing: border-box;
   min-height: 0;
   border-left: 1px solid #dcdfe6;
+}
+
+.editor-preview > div {
+  height: 100%;
+  overflow: hidden;
 }
 
 /* 预览区域内容样式 */
@@ -1497,12 +1527,12 @@ function debugPreviewState() {
   overflow: auto;
   font-size: 85%;
   line-height: 1.45;
-  background-color: #282c34 !important;
+  background-color: #000000 !important;
   border-radius: 6px;
   margin-bottom: 16px;
   color: #f8f8f2 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  border: 1px solid #444;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 1px solid #555;
 }
 
 /* 语言标签样式 */
@@ -1511,7 +1541,7 @@ function debugPreviewState() {
   top: 0;
   right: 0;
   background-color: #ff8c00;
-  color: #282c34;
+  color: #000000;
   padding: 2px 8px;
   font-size: 12px;
   border-bottom-left-radius: 5px;
@@ -1590,12 +1620,13 @@ function debugPreviewState() {
 
 /* 为Java代码块添加特殊样式，增强可见性 */
 .editor-preview pre.java-code-block {
-  background-color: #282c34 !important;
-  border: 1px solid #444 !important;
+  background-color: #000000 !important;
+  border: 1px solid #555 !important;
   border-radius: 6px !important;
   margin: 1em 0 !important;
   position: relative !important;
   overflow: auto !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* 自定义语言标签 */
@@ -1605,7 +1636,7 @@ function debugPreviewState() {
   top: 0;
   right: 0;
   background: #ff8c00;
-  color: #282c34;
+  color: #000000;
   padding: 2px 8px;
   font-size: 12px;
   border-bottom-left-radius: 5px;
@@ -1621,7 +1652,7 @@ function debugPreviewState() {
   top: 0;
   right: 0;
   background: #607D8B;
-  color: #fff;
+  color: #000000;
   padding: 2px 8px;
   font-size: 12px;
   border-bottom-left-radius: 5px;
@@ -1827,60 +1858,6 @@ function debugPreviewState() {
   color: #8be9fd !important;
 }
 
-/* 隐藏原生滚动条 */
-.editor-preview::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-
-/* 自定义中间滚动条 */
-.editor-scrollbar {
-  position: absolute;
-  top: 10px; /* 距离顶部留出一些空间 */
-  left: 50%;
-  width: 8px;
-  height: calc(100% - 20px); /* 上下各留出10px空间 */
-  transform: translateX(-50%);
-  z-index: 10;
-  background-color: rgba(240, 240, 240, 0.5); /* 添加轻微的背景色 */
-  border-radius: 4px;
-}
-
-.editor-scrollbar-thumb {
-  position: absolute;
-  width: 8px;
-  background-color: rgba(144, 147, 153, 0.3);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s, width 0.2s;
-}
-
-.editor-scrollbar-thumb:hover,
-.editor-scrollbar-thumb:active {
-  background-color: rgba(144, 147, 153, 0.5);
-  width: 10px; /* 悬停时稍微变宽 */
-  left: -1px; /* 保持居中 */
-}
-
-/* 编辑器内容区域中间分隔线 */
-.editor-content::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 1px;
-  height: 100%;
-  background-color: #dcdfe6;
-  transform: translateX(-50%);
-  z-index: 5;
-  display: none; /* 默认不显示 */
-}
-
-/* 添加一个类来控制分隔线的显示 */
-.show-divider::after {
-  display: block;
-}
-
 /* 全屏模式 */
 .fullscreen {
   position: fixed;
@@ -1998,5 +1975,15 @@ function debugPreviewState() {
     top: -1px;
     left: 0;
   }
+}
+
+/* 移除中间滚动条 */
+.editor-scrollbar {
+  display: none;
+}
+
+/* 确保全屏模式下也保持固定高度 */
+.fullscreen .editor-content {
+  height: calc(100vh - 90px);
 }
 </style> 
