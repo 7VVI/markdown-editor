@@ -49,7 +49,7 @@
       <button @click="insertText('*斜体*')" title="斜体">I</button>
       <button @click="insertText('~~删除线~~')" title="删除线">S</button>
       <button @click="insertText('[链接文字](链接URL)')" title="链接">🔗</button>
-      <button @click="insertText('![图片描述](图片URL)')" title="图片">🖼</button>
+      <button @click="insertImage" title="图片">🖼</button>
       <button @click="insertText('> 引用文字')" title="引用">❝</button>
       <button @click="insertText('- 列表项')" title="列表">•</button>
       <button @click="insertText('1. 列表项')" title="有序列表">1.</button>
@@ -177,6 +177,48 @@
       v-model:visible="guideVisible" 
       @dontShowAgain="setDontShowGuide"
     />
+    
+    <!-- 图片对话框 -->
+    <el-dialog
+      v-model="imageDialogVisible"
+      title="插入图片"
+      width="300px"
+      align-center
+      destroy-on-close
+    >
+      <div class="image-dialog-content">
+        <el-radio-group v-model="imageTabActive" @change="handleImageChange">
+          <el-radio-button label="url">URL</el-radio-button>
+          <el-radio-button label="upload">上传图片</el-radio-button>
+        </el-radio-group>
+        <div v-if="imageTabActive === 'url'" class="url-input">
+          <el-input
+            v-model="imageUrl"
+            placeholder="请输入图片URL"
+            maxlength="255"
+            show-word-limit
+          ></el-input>
+        </div>
+        <div v-if="imageTabActive === 'upload'" class="upload-input">
+          <el-upload
+            action="https://jsonplaceholder.typicode.com/posts/"
+            :show-file-list="false"
+            :before-upload="handleImageChange"
+          >
+            <el-button type="primary">上传图片</el-button>
+          </el-upload>
+        </div>
+        <div v-if="imageTabActive === 'upload'" class="preview-image">
+          <img :src="imagePreview" alt="预览图片" v-if="imagePreview" />
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="imageDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmInsertImage">确认插入</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -184,7 +226,7 @@
 import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
-import 'highlight.js/styles/vs2015.css'  // 直接在组件中再次引入样式，确保加载
+import 'highlight.js/styles/monokai-sublime.css'  // 直接在组件中再次引入样式，确保加载
 import { useEditorStore } from '../stores/editor'
 import { ElMessage } from 'element-plus'
 import WechatGuide from './WechatGuide.vue'
@@ -233,6 +275,15 @@ const pickerColor = ref('#000000')
 const currentTextColor = ref('#ff0000')
 const currentBgColor = ref('#ffff00')
 const colorPickerType = ref('text') // 'text' 或 'bg'
+
+// 图片对话框状态
+const imageDialogVisible = ref(false)
+const imageTabActive = ref('url')
+const imageUrl = ref('')
+const imageAlt = ref('')
+const imagePreview = ref('')
+const imageFile = ref(null)
+
 const colorPresets = ref([
   '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#000000', '#ffffff',
   '#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4',
@@ -695,17 +746,27 @@ function processHighlightElements(codeElement) {
 }
 
 // 更新内容
-function updateContent(e: Event) {
-  const target = e.target as HTMLTextAreaElement
-  editorStore.setContent(target.value)
+function updateContent(e) {
+  const newContent = e.target.value;
+  editorStore.setContent(newContent, false); // 更新内容但不添加历史记录
   
   // 当内容变化时，触发大纲更新
-  updateOutline()
+  updateOutline();
   
   // 更新滚动条
   nextTick(() => {
-    updateScrollbarThumb()
-  })
+    updateScrollbarThumb();
+  });
+  
+  // 清除之前的定时器
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+  }
+  
+  // 设置新的定时器，延迟添加历史记录
+  debounceTimer = setTimeout(() => {
+    editorStore.addHistory(newContent);
+  }, 500); // 500毫秒的防抖延迟
 }
 
 // 触发大纲更新
@@ -1644,6 +1705,105 @@ function syncPreviewScroll() {
       previewContent.scrollTop = scrollRatio * (previewScrollHeight - previewClientHeight)
     }
   }
+}
+
+// 插入图片
+function insertImage() {
+  // 重置图片对话框状态
+  imageUrl.value = ''
+  imageAlt.value = ''
+  imagePreview.value = ''
+  imageFile.value = null
+  imageTabActive.value = 'url'
+  
+  // 显示图片对话框
+  imageDialogVisible.value = true
+  
+  // 关闭右键菜单
+  closeContextMenu()
+}
+
+// 处理图片上传变化
+function handleImageChange(file) {
+  if (!file) return false
+  
+  // 检查文件类型
+  const isImage = file.type.startsWith('image/')
+  if (!isImage) {
+    ElMessage.error('请上传图片文件')
+    return false
+  }
+  
+  // 检查文件大小（限制为5MB）
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过5MB')
+    return false
+  }
+  
+  imageFile.value = file
+  
+  // 创建预览
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    imagePreview.value = e.target.result
+  }
+  reader.readAsDataURL(file)
+  
+  // 阻止自动上传
+  return false
+}
+
+// 确认插入图片
+function confirmInsertImage() {
+  if (!editorTextarea.value) return
+  
+  // 保存当前滚动位置
+  const scrollTop = editorTextarea.value.scrollTop
+  let previewScrollTop = 0
+  if (previewDiv.value && showPreview.value) {
+    previewScrollTop = previewDiv.value.scrollTop
+  }
+  
+  const start = editorTextarea.value.selectionStart
+  const end = editorTextarea.value.selectionEnd
+  
+  let markdownImage = ''
+  
+  if (imageTabActive.value === 'url' && imageUrl.value) {
+    // 使用URL插入图片
+    const alt = imageAlt.value || '图片'
+    markdownImage = `![${alt}](${imageUrl.value})`
+  } else if (imageTabActive.value === 'upload' && imageFile.value) {
+    // 使用Base64插入图片
+    const alt = imageAlt.value || '图片'
+    markdownImage = `![${alt}](${imagePreview.value})`
+  } else {
+    // 没有有效的图片，不做任何操作
+    imageDialogVisible.value = false
+    return
+  }
+  
+  // 插入Markdown图片语法
+  const text = editorStore.content
+  const newText = text.substring(0, start) + markdownImage + text.substring(end)
+  editorStore.setContent(newText)
+  
+  // 设置光标位置
+  setTimeout(() => {
+    editorTextarea.value.focus()
+    const newPosition = start + markdownImage.length
+    editorTextarea.value.setSelectionRange(newPosition, newPosition)
+    
+    // 恢复滚动位置
+    editorTextarea.value.scrollTop = scrollTop
+    if (previewDiv.value && showPreview.value) {
+      previewDiv.value.scrollTop = previewScrollTop
+    }
+  }, 0)
+  
+  // 关闭图片对话框
+  imageDialogVisible.value = false
 }
 </script>
 
@@ -2598,5 +2758,23 @@ function syncPreviewScroll() {
   height: 1px;
   background-color: #e0e0e0;
   margin: 5px 0;
+}
+
+.image-dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.url-input {
+  margin-bottom: 10px;
+}
+
+.upload-input {
+  margin-bottom: 10px;
+}
+
+.preview-image {
+  margin-bottom: 10px;
 }
 </style> 

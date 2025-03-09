@@ -28,6 +28,11 @@ export const useEditorStore = defineStore('editor', () => {
   const scrollToLineNumber = ref(0)
   const scrollOptions = ref({ smooth: true })
   
+  // 历史记录
+  const history = ref<string[]>([])
+  const historyIndex = ref(-1)
+  const maxHistoryLength = 100 // 最大历史记录数量
+  
   // 切换全屏状态
   function toggleFullscreen() {
     isFullscreen.value = !isFullscreen.value
@@ -50,8 +55,17 @@ export const useEditorStore = defineStore('editor', () => {
   }
   
   // 设置内容
-  function setContent(newContent: string) {
+  function setContent(newContent: string, addToHistory: boolean = true) {
+    // 如果内容没有变化，则不做任何操作
+    if (content.value === newContent) return
+    
+    // 设置新内容
     content.value = newContent
+    
+    // 添加到历史记录
+    if (addToHistory) {
+      addHistory(newContent)
+    }
   }
   
   // 滚动到指定行
@@ -443,6 +457,45 @@ export const useEditorStore = defineStore('editor', () => {
     }
   }
   
+  // 添加历史记录
+  function addHistory(newContent: string) {
+    // 如果当前不在历史记录的最后，则删除当前位置之后的所有记录
+    if (historyIndex.value < history.value.length - 1) {
+      history.value = history.value.slice(0, historyIndex.value + 1)
+    }
+    
+    // 添加新的历史记录
+    history.value.push(newContent)
+    
+    // 如果历史记录超过最大长度，则删除最早的记录
+    if (history.value.length > maxHistoryLength) {
+      history.value.shift()
+    }
+    
+    // 更新当前位置
+    historyIndex.value = history.value.length - 1
+  }
+  
+  // 撤销
+  function undo() {
+    if (historyIndex.value > 0) {
+      historyIndex.value--
+      content.value = history.value[historyIndex.value]
+      return true
+    }
+    return false
+  }
+  
+  // 重做
+  function redo() {
+    if (historyIndex.value < history.value.length - 1) {
+      historyIndex.value++
+      content.value = history.value[historyIndex.value]
+      return true
+    }
+    return false
+  }
+  
   return {
     content,
     currentTheme,
@@ -458,6 +511,9 @@ export const useEditorStore = defineStore('editor', () => {
     setContent,
     scrollToLine,
     copyToClipboard,
-    copyToWechat
+    copyToWechat,
+    addHistory,
+    undo,
+    redo
   }
 }) 
