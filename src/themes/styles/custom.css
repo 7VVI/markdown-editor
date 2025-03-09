@@ -1,0 +1,130 @@
+/* 自定义主题样式示例 */
+.theme-custom {
+  --heading-color: #8e44ad;
+  --text-color: #2c3e50;
+  --link-color: #3498db;
+  --code-bg: #f9f9f9;
+  --blockquote-color: #7f8c8d;
+  --blockquote-border: #ecf0f1;
+  --table-border: #bdc3c7;
+  --table-header-bg: #ecf0f1;
+  
+  color: var(--text-color);
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.6;
+  background-color: #fff;
+}
+
+/* 自定义主题特定样式覆盖 */
+.theme-custom h1,
+.theme-custom h2,
+.theme-custom h3,
+.theme-custom h4,
+.theme-custom h5,
+.theme-custom h6 {
+  color: var(--heading-color);
+  font-weight: 500;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+.theme-custom h1 {
+  font-size: 2.2em;
+  border-bottom: 2px solid #ecf0f1;
+  padding-bottom: 0.3em;
+}
+
+.theme-custom h2 {
+  font-size: 1.8em;
+  border-bottom: 1px solid #ecf0f1;
+  padding-bottom: 0.3em;
+}
+
+.theme-custom h3 {
+  font-size: 1.5em;
+}
+
+.theme-custom h4 {
+  font-size: 1.2em;
+}
+
+.theme-custom p {
+  margin-bottom: 16px;
+}
+
+.theme-custom a {
+  color: var(--link-color);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--link-color);
+  transition: all 0.2s ease;
+}
+
+.theme-custom a:hover {
+  opacity: 0.8;
+  border-bottom: 1px solid var(--link-color);
+}
+
+.theme-custom blockquote {
+  background-color: #f9f9f9;
+  border-left: 4px solid var(--blockquote-border);
+  padding: 10px 15px;
+  margin: 15px 0;
+  color: var(--blockquote-color);
+}
+
+.theme-custom code {
+  background-color: var(--code-bg);
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-family: 'Fira Code', monospace;
+  font-size: 90%;
+  color: #e74c3c;
+}
+
+.theme-custom pre {
+  background-color: var(--code-bg);
+  border-radius: 4px;
+  padding: 15px;
+  overflow: auto;
+  border: 1px solid #eee;
+}
+
+.theme-custom pre code {
+  color: #333;
+  background-color: transparent;
+  padding: 0;
+}
+
+.theme-custom table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 20px 0;
+  border: 1px solid var(--table-border);
+}
+
+.theme-custom table th,
+.theme-custom table td {
+  padding: 10px;
+  border: 1px solid var(--table-border);
+}
+
+.theme-custom table th {
+  background-color: var(--table-header-bg);
+  font-weight: 600;
+}
+
+.theme-custom table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* 自定义列表样式 */
+.theme-custom ul,
+.theme-custom ol {
+  padding-left: 25px;
+  margin-bottom: 20px;
+}
+
+.theme-custom ul li,
+.theme-custom ol li {
+  margin-bottom: 8px;
+} 

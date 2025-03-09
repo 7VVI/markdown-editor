@@ -1,0 +1,111 @@
+/* 基础样式，适用于所有主题 */
+
+/* 标题样式 */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--heading-color, #333);
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 2em;
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: 0.3em;
+}
+
+h2 {
+  font-size: 1.5em;
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: 0.3em;
+}
+
+h3 {
+  font-size: 1.25em;
+}
+
+h4 {
+  font-size: 1em;
+}
+
+/* 段落样式 */
+p {
+  margin-top: 0;
+  margin-bottom: 16px;
+  line-height: var(--line-height, 1.6);
+}
+
+/* 链接样式 */
+a {
+  color: var(--link-color, #0366d6);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* 代码样式 */
+code {
+  font-family: var(--code-font-family, 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace);
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: var(--code-bg, #f6f8fa);
+  border-radius: 3px;
+}
+
+pre {
+  font-family: var(--code-font-family, 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace);
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: var(--code-bg, #f6f8fa);
+  border-radius: 3px;
+}
+
+pre code {
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+}
+
+/* 引用样式 */
+blockquote {
+  margin: 0;
+  padding: 0 1em;
+  color: var(--blockquote-color, #6a737d);
+  border-left: 0.25em solid var(--blockquote-border, #dfe2e5);
+}
+
+/* 列表样式 */
+ul, ol {
+  padding-left: 2em;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+/* 表格样式 */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+table th, table td {
+  padding: 6px 13px;
+  border: 1px solid var(--table-border, #dfe2e5);
+}
+
+table th {
+  background-color: var(--table-header-bg, #f6f8fa);
+  font-weight: 600;
+}
+
+/* 图片样式 */
+img {
+  max-width: 100%;
+  box-sizing: content-box;
+} 

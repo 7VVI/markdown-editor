@@ -1,0 +1,61 @@
+/* 优雅主题样式 */
+.theme-elegant {
+  --heading-color: #2c3e50;
+  --text-color: #34495e;
+  --link-color: #3498db;
+  --code-bg: #f8f8f8;
+  --blockquote-color: #6a737d;
+  --blockquote-border: #dfe2e5;
+  --table-border: #dfe2e5;
+  --table-header-bg: #f8f8f8;
+  
+  color: var(--text-color);
+  font-family: 'Georgia', serif;
+  line-height: 1.8;
+}
+
+/* 优雅主题特定样式覆盖 */
+.theme-elegant h1,
+.theme-elegant h2,
+.theme-elegant h3,
+.theme-elegant h4,
+.theme-elegant h5,
+.theme-elegant h6 {
+  font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+  margin-top: 28px;
+  margin-bottom: 18px;
+  line-height: 1.3;
+}
+
+.theme-elegant h1 {
+  font-size: 2.2em;
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: 0.3em;
+}
+
+.theme-elegant h2 {
+  font-size: 1.7em;
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: 0.3em;
+}
+
+.theme-elegant h3 {
+  font-size: 1.4em;
+}
+
+.theme-elegant h4 {
+  font-size: 1.2em;
+}
+
+.theme-elegant p {
+  margin-bottom: 20px;
+}
+
+.theme-elegant a {
+  border-bottom: 1px dotted var(--link-color);
+}
+
+.theme-elegant a:hover {
+  border-bottom: 1px solid var(--link-color);
+  text-decoration: none;
+} 

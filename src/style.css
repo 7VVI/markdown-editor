@@ -1,0 +1,375 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #333;
+  background-color: #fff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 编辑器预览区域的代码高亮样式 */
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  color: #333;
+  background: #f8f8f8;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #998;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst {
+  color: #333;
+  font-weight: bold;
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag .hljs-attr {
+  color: #008080;
+}
+
+.hljs-string,
+.hljs-doctag {
+  color: #d14;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+  color: #900;
+  font-weight: bold;
+}
+
+.hljs-subst {
+  font-weight: normal;
+}
+
+.hljs-type,
+.hljs-class .hljs-title {
+  color: #458;
+  font-weight: bold;
+}
+
+.hljs-tag,
+.hljs-name,
+.hljs-attribute {
+  color: #000080;
+  font-weight: normal;
+}
+
+.hljs-regexp,
+.hljs-link {
+  color: #009926;
+}
+
+.hljs-symbol,
+.hljs-bullet {
+  color: #990073;
+}
+
+.hljs-built_in,
+.hljs-builtin-name {
+  color: #0086b3;
+}
+
+.hljs-meta {
+  color: #999;
+  font-weight: bold;
+}
+
+.hljs-deletion {
+  background: #fdd;
+}
+
+.hljs-addition {
+  background: #dfd;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+/* 代码高亮增强样式 */
+.code-block-wrapper {
+  position: relative;
+  margin: 1em 0;
+}
+
+pre {
+  position: relative;
+  background-color: #1e1e1e;
+  border-radius: 6px;
+  padding: 1em;
+  margin: 0;
+  overflow: auto;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  line-height: 1.5;
+}
+
+pre code {
+  display: block;
+  white-space: pre;
+  overflow-x: auto;
+  color: #d4d4d4;
+}
+
+/* 代码块标题 */
+pre::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.2em 0.5em;
+  font-size: 0.8em;
+  color: #abb2bf;
+  background-color: #282c34;
+  border-bottom-left-radius: 4px;
+}
+
+/* 代码块复制按钮 */
+.code-copy-button {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  padding: 0.2em 0.5em;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 4px;
+  color: #abb2bf;
+  cursor: pointer;
+  font-size: 0.8em;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+pre:hover .code-copy-button {
+  opacity: 1;
+}
+
+.code-copy-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.code-copy-button:active {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 语法高亮自定义样式 */
+.keyword {
+  color: #569cd6;
+  font-weight: bold;
+}
+
+.keyword-override {
+  color: #b5cea8;
+  font-weight: bold;
+}
+
+.string-literal {
+  color: #ce9178;
+}
+
+.comment {
+  color: #6a9955;
+  font-style: italic;
+}
+
+.type-highlight {
+  color: #4ec9b0;
+  font-weight: normal;
+}
+
+.method-name {
+  color: #dcdcaa;
+  font-weight: normal;
+}
+
+.annotation {
+  color: #b5cea8;
+  font-weight: bold;
+}
+
+.generic-type {
+  color: #4ec9b0;
+  font-style: italic;
+}
+
+/* 代码块悬停效果 */
+pre:hover {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* 代码行悬停效果 */
+.code-line:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Java/TypeScript特定语法高亮 */
+.type-highlight {
+  color: #4ec9b0;
+  font-weight: normal;
+}
+
+.method-name {
+  color: #dcdcaa;
+  font-weight: normal;
+}
+
+.annotation {
+  color: #b5cea8;
+  font-weight: bold;
+}
+
+.generic-type {
+  color: #4ec9b0;
+  font-style: italic;
+}
+
+/* 特殊注解样式 */
+.keyword-override {
+  color: #b5cea8;
+  font-weight: bold;
+}
+
+/* 特定语言元素样式 */
+.hljs-keyword {
+  color: #569cd6;
+}
+
+.hljs-string {
+  color: #ce9178;
+}
+
+.hljs-number {
+  color: #b5cea8;
+}
+
+.hljs-function {
+  color: #dcdcaa;
+}
+
+.hljs-title {
+  color: #dcdcaa;
+}
+
+.hljs-params {
+  color: #9cdcfe;
+}
+
+.hljs-comment {
+  color: #6a9955;
+}
+
+.hljs-variable {
+  color: #9cdcfe;
+}
+
+.hljs-type {
+  color: #4ec9b0;
+}
+
+.hljs-built_in {
+  color: #4ec9b0;
+}
+
+.hljs-literal {
+  color: #569cd6;
+}
+
+.hljs-attr {
+  color: #9cdcfe;
+}
+
+.hljs-selector-class {
+  color: #d7ba7d;
+}
+
+.hljs-selector-id {
+  color: #d7ba7d;
+}
+
+.hljs-attribute {
+  color: #9cdcfe;
+}
+
+.hljs-tag {
+  color: #569cd6;
+}
+
+.hljs-name {
+  color: #569cd6;
+}
+
+.hljs-meta {
+  color: #dcdcaa;
+}
+
+.hljs-doctag {
+  color: #608b4e;
+}
+
+.hljs-regexp {
+  color: #d16969;
+}
