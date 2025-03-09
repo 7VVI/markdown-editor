@@ -56,6 +56,33 @@
     <!-- 编辑器主体 -->
     <div class="editor-content" ref="editorContent">
       <div class="editor-container">
+        <!-- 大纲区域 -->
+        <div class="outline-container" v-show="showOutline">
+          <div class="outline-header">
+            <h3>文档大纲</h3>
+            <el-button type="text" @click="toggleOutline" class="outline-toggle">
+              <el-icon><ArrowLeft /></el-icon>
+            </el-button>
+          </div>
+          <div class="outline-body">
+            <div
+              v-for="(item, index) in outline"
+              :key="index"
+              class="outline-item"
+              :class="{ 
+                'active': currentHeadingIndex === index,
+                [`level-${item.level}`]: true 
+              }"
+              @click="scrollToHeading(item.index)"
+            >
+              <span class="outline-item-text">{{ item.text }}</span>
+            </div>
+            <div v-if="outline.length === 0" class="outline-empty">
+              暂无大纲
+            </div>
+          </div>
+        </div>
+        
         <div class="editor-input" :class="{ 'full-width': !showPreview }">
           <textarea
             ref="editorTextarea"
@@ -189,6 +216,11 @@ const colorPresets = ref([
   '#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4',
   '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722'
 ])
+
+// 大纲相关状态
+const showOutline = ref(true)
+const outline = ref([])
+const currentHeadingIndex = ref(-1)
 
 // 窗口大小变化监听函数
 const handleResize = () => {
@@ -1344,6 +1376,107 @@ function endDrag() {
   document.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('mouseup', endDrag)
 }
+
+// 切换大纲显示
+function toggleOutline() {
+  showOutline.value = !showOutline.value
+}
+
+// 解析Markdown内容生成大纲
+function generateOutline() {
+  const lines = content.value.split('\n')
+  const headings = []
+  
+  // 匹配标题行
+  lines.forEach((line, index) => {
+    const match = line.match(/^(#+)\s+(.+)$/)
+    if (match) {
+      const level = match[1].length  // 标题级别 (1-6)
+      const text = match[2].trim()   // 标题文本
+      
+      headings.push({
+        level,
+        text,
+        index: index + 1  // 行号 (1-based)
+      })
+    }
+  })
+  
+  outline.value = headings
+}
+
+// 编辑器内容变化时更新大纲
+watch(() => content.value, () => {
+  generateOutline()
+}, { immediate: true })
+
+// 点击大纲项滚动到相应位置
+function scrollToHeading(lineNumber) {
+  editorStore.scrollToLine(lineNumber)
+}
+
+// 监听光标位置变化，更新大纲高亮
+window.addEventListener('cursor-position-change', (e) => {
+  // @ts-ignore
+  const currentLine = e.detail?.lineNumber || 0
+  
+  // 查找当前行所在的标题
+  let found = -1
+  for (let i = outline.value.length - 1; i >= 0; i--) {
+    if (outline.value[i].index <= currentLine) {
+      found = i
+      break
+    }
+  }
+  
+  currentHeadingIndex.value = found
+})
+
+// 编辑器滚动时更新大纲高亮
+function updateCurrentHeadingOnScroll() {
+  if (!editorTextarea.value) return
+  
+  try {
+    // 估算可见范围内的第一行
+    const scrollTop = (editorTextarea.value as HTMLTextAreaElement).scrollTop
+    const lineHeight = parseInt(getComputedStyle(editorTextarea.value as HTMLTextAreaElement).lineHeight) || 20
+    const visibleLine = Math.floor(scrollTop / lineHeight) + 1
+    
+    // 查找当前可见范围内的标题
+    let found = -1
+    for (let i = outline.value.length - 1; i >= 0; i--) {
+      if (outline.value[i].index <= visibleLine) {
+        found = i
+        break
+      }
+    }
+    
+    currentHeadingIndex.value = found
+  } catch (e) {
+    console.error('更新大纲高亮失败:', e)
+  }
+}
+
+// 添加编辑器滚动监听
+onMounted(() => {
+  if (editorTextarea.value) {
+    try {
+      (editorTextarea.value as HTMLTextAreaElement).addEventListener('scroll', updateCurrentHeadingOnScroll)
+    } catch (e) {
+      console.error('添加滚动监听失败:', e)
+    }
+  }
+})
+
+onUnmounted(() => {
+  if (editorTextarea.value) {
+    try {
+      (editorTextarea.value as HTMLTextAreaElement).removeEventListener('scroll', updateCurrentHeadingOnScroll)
+    } catch (e) {
+      console.error('移除滚动监听失败:', e)
+    }
+  }
+})
 </script>
 
 <style scoped>
@@ -1351,24 +1484,33 @@ function endDrag() {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  width: 100%;
+  width: 100vw;
   overflow: hidden;
   padding: 0;
+  margin: 0;
+  border: none;
   box-sizing: border-box;
-  border: 1px solid #dcdfe6;
+  position: fixed;  /* 使用固定定位 */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;  /* 较高的z-index确保显示在最上层 */
+  background-color: white;
 }
 
 .editor-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 10px;
   height: 40px;
   background-color: #f5f7fa;
   border-bottom: 1px solid #dcdfe6;
   width: 100%;
-  position: relative;
   box-sizing: border-box;
+  z-index: 1001;  /* 标题栏保持最高层级 */
+  flex-shrink: 0;
 }
 
 .header-left {
@@ -1393,37 +1535,29 @@ function endDrag() {
   display: flex;
   padding: 4px 10px;
   background-color: white;
-  border-bottom: 1px solid #eaeaea;
-  width: 100%;
+  border-bottom: 1px solid #dcdfe6;
+  height: 35px;
   box-sizing: border-box;
   overflow-x: auto;
   flex-wrap: nowrap;
   align-items: center;
-  margin: 0;
-  position: relative;
+  z-index: 1000;  /* 工具栏层级，低于标题栏 */
+  flex-shrink: 0;
 }
 
 .simple-format-toolbar button {
-  margin-right: 8px;
+  background-color: white;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  margin: 0 2px;
   padding: 2px 6px;
-  border: none;
-  background-color: transparent;
-  border-radius: 2px;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  color: #606266;
-  outline: none;
-  transition: all 0.15s;
+  transition: all 0.3s;
 }
 
 .simple-format-toolbar button:hover {
-  background-color: #f0f2f5;
-  color: #409eff;
-}
-
-.simple-format-toolbar button:active {
-  background-color: #e6e8eb;
+  background-color: #f5f7fa;
+  border-color: #c0c4cc;
 }
 
 /* 调整编辑器内容区域的样式 */
@@ -1432,59 +1566,64 @@ function endDrag() {
   flex: 1;
   position: relative;
   overflow: hidden;
-  height: calc(100vh - 80px);
   border: none;
-  margin: 0;
+  padding: 0;
+  margin-top: 0;
   background-color: white;
+  height: calc(100vh - 75px);  /* 减去标题栏和工具栏的高度 */
 }
 
 .editor-container {
   display: flex;
-  flex: 1;
   width: 100%;
   height: 100%;
-  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  background-color: white;
 }
 
 .editor-input {
   flex: 1;
   height: 100%;
+  overflow: auto;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
   position: relative;
-  min-height: 0;
-  max-width: 50%;
-  display: flex;
+  background-color: white;
+  z-index: 999;  /* 编辑区域和内容保持同一层级 */
 }
 
 .editor-input textarea {
   width: 100%;
   height: 100%;
-  padding: 16px;
   border: none;
+  outline: none;
   resize: none;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.6;
-  color: #303133;
-  background-color: #ffffff;
-  outline: none;
+  padding: 10px;
+  margin: 0;
+  background-color: white;
+  color: #2c3e50;
   box-sizing: border-box;
-  overflow: hidden;
+  position: relative;
+  z-index: 999;
 }
 
+/* 预览区域样式 */
 .editor-preview {
   flex: 1;
   height: 100%;
-  padding: 16px;
-  overflow: hidden;
-  background-color: #ffffff;
+  overflow: auto;
+  padding: 10px;
+  margin: 0;
   box-sizing: border-box;
-  min-height: 0;
+  position: relative;
+  background-color: white;
   border-left: 1px solid #dcdfe6;
-}
-
-.editor-preview > div {
-  height: 100%;
-  overflow: hidden;
+  z-index: 999;  /* 与编辑区域保持同一层级 */
 }
 
 /* 预览区域内容样式 */
@@ -1666,12 +1805,6 @@ function endDrag() {
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
   font-size: 14px !important;
   line-height: 1.5 !important;
-}
-
-/* 添加一个特别的处理，确保@Override注解为橙色 */
-.editor-preview pre code.language-java .hljs-meta:contains("@Override") {
-  color: #ff8c00 !important;
-  font-weight: bold !important;
 }
 
 /* 微信公众号复制优化 - 使用更鲜明的颜色，确保在复制后也可见 */
@@ -1858,25 +1991,21 @@ function endDrag() {
   color: #8be9fd !important;
 }
 
-/* 全屏模式 */
-.fullscreen {
+/* 全屏模式样式 */
+.full-screen {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 9999;
-  border-radius: 0;
-  border: none;
+  z-index: 1000;
+  background-color: white;
 }
 
-.fullscreen .editor-header {
-  position: relative;
-  width: 100%;
-}
-
-.fullscreen .markdown-toolbar {
-  margin-top: 0;
+.full-screen .editor-input,
+.full-screen .editor-preview {
+  height: calc(100vh - 75px);
+  max-height: none;
 }
 
 /* 主题样式 */
@@ -1982,8 +2111,124 @@ function endDrag() {
   display: none;
 }
 
-/* 确保全屏模式下也保持固定高度 */
-.fullscreen .editor-content {
-  height: calc(100vh - 90px);
+/* 添加一些针对Java代码的特殊高亮 */
+:deep(.language-java .hljs-type) {
+  color: #8be9fd !important;
 }
+
+/* 大纲样式 */
+.outline-container {
+  width: 200px;
+  height: 100%;
+  border-right: 1px solid #dcdfe6;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 999;
+}
+
+.outline-header {
+  padding: 10px;
+  border-bottom: 1px solid #e6e6e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.outline-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.outline-toggle {
+  padding: 2px;
+}
+
+.outline-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+.outline-item {
+  padding: 5px 10px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.2s;
+}
+
+.outline-item:hover {
+  background-color: #ebeef5;
+}
+
+.outline-item.active {
+  background-color: #e6f1ff;
+  border-left-color: #409eff;
+}
+
+.outline-item-text {
+  font-size: 14px;
+  color: #606266;
+}
+
+/* 不同级别的标题缩进 */
+.outline-item.level-1 {
+  font-weight: bold;
+}
+
+.outline-item.level-2 {
+  padding-left: 15px;
+}
+
+.outline-item.level-3 {
+  padding-left: 30px;
+}
+
+.outline-item.level-4 {
+  padding-left: 45px;
+  font-size: 13px;
+}
+
+.outline-item.level-5, .outline-item.level-6 {
+  padding-left: 60px;
+  font-size: 12px;
+  color: #909399;
+}
+
+.outline-empty {
+  padding: 20px 10px;
+  color: #909399;
+  text-align: center;
+  font-style: italic;
+}
+
+/* 调整编辑器容器适应大纲 */
+.editor-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background-color: white;
+}
+
+.editor-input {
+  flex: 1;
+  height: 100%;
+  overflow: auto;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  position: relative;
+  background-color: white;
+  z-index: 999;  /* 编辑区域和内容保持同一层级 */
+}
+
+/* 全屏模式样式 */
 </style> 
