@@ -56,6 +56,10 @@ export const useEditorStore = defineStore('editor', () => {
   // 滚动到指定行
   function scrollToLine(lineNumber: number) {
     scrollToLineNumber.value = lineNumber
+    // 一段时间后重置，以便下次调用仍然生效（即使是相同行号）
+    setTimeout(() => {
+      scrollToLineNumber.value = 0
+    }, 100)
   }
   
   // 普通复制到剪贴板
